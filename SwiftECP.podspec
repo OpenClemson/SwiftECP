@@ -1,28 +1,14 @@
-#
-# Be sure to run `pod lib lint SwiftECP.podspec' to ensure this is a
-# valid spec and remove all comments before submitting the spec.
-#
-# Any lines starting with a # are optional, but encouraged
-#
-# To learn more about a Podspec see http://guides.cocoapods.org/syntax/podspec.html
-#
-
 Pod::Spec.new do |s|
   s.name             = "SwiftECP"
-  s.version          = "0.1.0"
-  s.summary          = "A short description of SwiftECP."
+  s.version          = "1.0.0"
+  s.summary          = "SwiftECP is a simple Shibboleth ECP client for iOS."
   s.description      = <<-DESC
-                       An optional longer description of SwiftECP
-
-                       * Markdown format.
-                       * Don't worry about the indent, we strip it!
+                       Need Shibboleth login on your iOS app but don't want to use a webview? Don't want to deal with XML or read a spec? Use SwiftECP to do the work for you! SwiftECP is a spec-conformant Shibboleth ECP client for iOS. Simply provide credentials and a Shibboleth-protected resource URL and SwiftECP will hand you a Shibboleth cookie to attach to further requests or inject into a webview.
                        DESC
-  s.homepage         = "https://github.com/<GITHUB_USERNAME>/SwiftECP"
-  # s.screenshots     = "www.example.com/screenshots_1", "www.example.com/screenshots_2"
+  s.homepage         = "https://github.com/OpenClemson/SwiftECP"
   s.license          = 'MIT'
-  s.author           = { "Tyler Thompson" => "tyler@tylerpaulthompson.com" }
-  s.source           = { :git => "https://github.com/<GITHUB_USERNAME>/SwiftECP.git", :tag => s.version.to_s }
-  # s.social_media_url = 'https://twitter.com/<TWITTER_USERNAME>'
+  s.author           = { "Tyler Thompson" => "tpthomp@clemson.edu" }
+  s.source           = { :git => "https://github.com/OpenClemson/SwiftECP.git", :tag => s.version.to_s }
 
   s.platform     = :ios, '8.0'
   s.requires_arc = true
@@ -32,7 +18,7 @@ Pod::Spec.new do |s|
     'SwiftECP' => ['Pod/Assets/*.png']
   }
 
-  # s.public_header_files = 'Pod/Classes/**/*.h'
-  # s.frameworks = 'UIKit', 'MapKit'
-  # s.dependency 'AFNetworking', '~> 2.3'
+  s.dependency 'AEXML', '~> 1.3'
+  s.dependency 'Alamofire', '~> 1.2'
+  s.dependency 'PromiseKit', '~> 2.0'
 end

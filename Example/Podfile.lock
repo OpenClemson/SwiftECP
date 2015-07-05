@@ -1,0 +1,48 @@
+PODS:
+  - AEXML (1.3.0)
+  - Alamofire (1.2.3)
+  - Nimble (1.0.0)
+  - OMGHTTPURLRQ (2.1.3):
+    - OMGHTTPURLRQ/RQ (= 2.1.3)
+  - OMGHTTPURLRQ/FormURLEncode (2.1.3)
+  - OMGHTTPURLRQ/RQ (2.1.3):
+    - OMGHTTPURLRQ/FormURLEncode
+    - OMGHTTPURLRQ/UserAgent
+  - OMGHTTPURLRQ/UserAgent (2.1.3)
+  - PromiseKit (2.0.6):
+    - PromiseKit/Foundation (= 2.0.6)
+    - PromiseKit/QuartzCore (= 2.0.6)
+    - PromiseKit/UIKit (= 2.0.6)
+  - PromiseKit/CorePromise (2.0.6)
+  - PromiseKit/Foundation (2.0.6):
+    - OMGHTTPURLRQ (~> 2.1.3)
+    - PromiseKit/CorePromise
+  - PromiseKit/QuartzCore (2.0.6):
+    - PromiseKit/CorePromise
+  - PromiseKit/UIKit (2.0.6):
+    - PromiseKit/CorePromise
+  - Quick (0.3.1)
+  - SwiftECP (0.1.0):
+    - AEXML (~> 1.3)
+    - Alamofire (~> 1.2)
+    - PromiseKit (~> 2.0)
+
+DEPENDENCIES:
+  - Nimble
+  - Quick (~> 0.3.1)
+  - SwiftECP (from `../`)
+
+EXTERNAL SOURCES:
+  SwiftECP:
+    :path: "../"
+
+SPEC CHECKSUMS:
+  AEXML: 01da6ad603b1db797f0c5476da40db4ca11bdbdd
+  Alamofire: 5550bf0b575ed1a4bf9be572f9463e1015cc169e
+  Nimble: 8bee528e5fcc403653076545db562d2b5db7bb87
+  OMGHTTPURLRQ: c4268dea4295b585d711055dbcd87bfa82badd5f
+  PromiseKit: 632e13f2ef973f7483ce166b4d69ea29573c70dc
+  Quick: 824572d3d198d51e52cf4aa722cebf7e59952a35
+  SwiftECP: 17bb242fd30e76ed3dab88c6ce160cc2360300a3
+
+COCOAPODS: 0.37.2

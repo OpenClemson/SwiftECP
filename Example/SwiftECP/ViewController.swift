@@ -1,24 +1,23 @@
-//
-//  ViewController.swift
-//  SwiftECP
-//
-//  Created by Tyler Thompson on 07/05/2015.
-//  Copyright (c) 2015 Tyler Thompson. All rights reserved.
-//
-
 import UIKit
+import SwiftECP
 
 class ViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view, typically from a nib.
+		
+		ECP(
+			username: "nobody",
+			password: "nothing",
+			protectedURL: NSURL(
+				string: "https://my.dev.clemson.edu/srv/broker/redirect.php"
+			)!
+		).login().then { cookie in
+			println(cookie)
+		}.catch { error in
+			println(error.localizedDescription)
+			println(error.localizedFailureReason)
+		}
     }
-
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
-    }
-
 }
 
