@@ -1,0 +1,13 @@
+source 'https://github.com/CocoaPods/Specs.git'
+use_frameworks!
+
+target 'SwiftECP_Example', :exclusive => true do
+  pod "SwiftECP", :path => "../"
+end
+
+target 'SwiftECP_Tests', :exclusive => true do
+  pod "SwiftECP", :path => "../"
+
+  pod 'Quick', '~> 0.3.1'
+  pod 'Nimble'
+end
