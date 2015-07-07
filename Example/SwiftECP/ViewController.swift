@@ -12,8 +12,15 @@ class ViewController: UIViewController {
 			protectedURL: NSURL(
 				string: "https://my.dev.clemson.edu/srv/broker/redirect.php"
 			)!
-		).login().then { cookie in
-			println(cookie)
+		).login().then { request, response, body -> Void in
+			println(body)
+			
+			if let cookies = NSHTTPCookieStorage.sharedHTTPCookieStorage().cookies as? [NSHTTPCookie] {
+				let shibCookie = cookies.filter { (cookie: NSHTTPCookie) in
+					cookie.name.rangeOfString("shibsession") != nil
+				}[0]
+				println(shibCookie)
+			}
 		}.catch { error in
 			println(error.localizedDescription)
 			println(error.localizedFailureReason)

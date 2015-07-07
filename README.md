@@ -17,12 +17,21 @@ ECP(
 	protectedURL: NSURL(
 		string: "https://app.university.edu/protected"
 	)!
-).login().then { cookie in
-	// At this point you have access to a valid Shibboleth cookie.
-	// The cookie also is stored in the default cookie store.
+).login().then { request, response, body -> Void in
+	// If the request was successful, the protected resource will
+	// be available in 'body'. Make sure to implement a mechanism to
+	// detect authorization timeouts.
+	println(body)
+
+	// The Shibboleth auth cookie is now stored in the sharedHTTPCookieStorage.
 	// Attach this cookie to subsequent requests to protected resources.
-	// Make sure to implement a mechanism to detect authorization timeouts.
-	println(cookie)
+	// You can access the cookie with the following code:
+	if let cookies = NSHTTPCookieStorage.sharedHTTPCookieStorage().cookies as? [NSHTTPCookie] {
+		let shibCookie = cookies.filter { (cookie: NSHTTPCookie) in
+			cookie.name.rangeOfString("shibsession") != nil
+		}[0]
+		println(shibCookie)
+	}
 }.catch { error in
 	// This is an NSError containing both a user-friendly message and a
 	// technical debug message. This can help diagnose problems with your
@@ -54,7 +63,6 @@ pod "SwiftECP"
 ## Todo
 
 - Unit and integration tests
-- Optionally return authenticated request body instead of, or in addition to, the Shibboleth cookie
 - Detailed documentation
 
 Pull requests are welcome and encouraged!
