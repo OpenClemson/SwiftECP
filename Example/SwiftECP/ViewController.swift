@@ -10,7 +10,7 @@ class ViewController: UIViewController {
 			username: "nobody",
 			password: "nothing",
 			protectedURL: NSURL(
-				string: "https://my.dev.clemson.edu/srv/broker/redirect.php"
+				string: "https://app.university.edu/protected"
 			)!
 		).login().then { request, response, body -> Void in
 			println(body)
