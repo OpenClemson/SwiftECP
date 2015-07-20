@@ -86,6 +86,9 @@ public struct ECP {
 				// Bust out if there's an XML parse error
 				if let err = error { reject(err); return }
 				
+				// Remove the XML signature
+				xml.root["S:Body"]["samlp:AuthnRequest"]["ds:Signature"].removeFromParent()
+				
 				// Store this so we can compare it against the AssertionConsumerServiceURL from the IdP
 				let responseConsumerURLString = xml.root["S:Header"]["paos:Request"]
 					.attributes["responseConsumerURL"] as? String
@@ -133,7 +136,7 @@ public struct ECP {
 									forHTTPHeaderField: "Authorization"
 								)
 								idpReq.timeoutInterval = 10
-
+								println(envelope.xmlString)
 								return fulfill(IdpRequestData(
 									request: idpReq,
 									responseConsumerURL: responseConsumerURL,
@@ -154,6 +157,7 @@ public struct ECP {
 	
 	func buildSpRequest(idpResponseData: IdpResponseData) -> Promise<NSMutableURLRequest> {
 		return Promise { fulfill, reject in
+			println(idpResponseData.body)
 			var xmlError: NSError?
 			if let
 				xmlData = idpResponseData.body.dataUsingEncoding(NSUTF8StringEncoding),
