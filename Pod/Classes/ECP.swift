@@ -157,7 +157,6 @@ public struct ECP {
 	
 	func buildSpRequest(idpResponseData: IdpResponseData) -> Promise<NSMutableURLRequest> {
 		return Promise { fulfill, reject in
-			println(idpResponseData.body)
 			var xmlError: NSError?
 			if let
 				xmlData = idpResponseData.body.dataUsingEncoding(NSUTF8StringEncoding),
