@@ -2,6 +2,7 @@ import Foundation
 import Alamofire
 import AEXML
 import PromiseKit
+import XCGLogger
 
 public struct ECP {
 	public let username: String
@@ -15,10 +16,20 @@ public struct ECP {
 	}
 	public let protectedURL: NSURL
 	
-	public init(username: String, password: String, protectedURL: NSURL) {
+	let log = XCGLogger.defaultInstance()
+	
+	public init(username: String, password: String, protectedURL: NSURL, logLevel: XCGLogger.LogLevel) {
 		self.username = username
 		self.password = password
 		self.protectedURL = protectedURL
+		log.setup(
+			logLevel: logLevel,
+			showLogLevel: true,
+			showFileNames: true,
+			showLineNumbers: true,
+			writeToFile: nil,
+			fileLogLevel: nil
+		)
 	}
 	
 	struct IdpRequestData {
@@ -39,6 +50,7 @@ public struct ECP {
 		let request = Alamofire.request(self.buildInitialRequest())
 		return request.responseString()
 		.then { req, resp, string -> Promise<IdpRequestData> in
+			self.log.debug("(1/3) Initial SP request complete. Status: \(resp.statusCode).")
 			return self.buildIdpRequest(string)
 		}.then { idpRequestData -> Promise<(NSURLRequest, NSHTTPURLResponse, String, IdpRequestData)> in
 			return Promise { fulfill, reject in
@@ -47,15 +59,16 @@ public struct ECP {
 					fulfill($0, $1, $2, idpRequestData)
 				}
 			}
-		}.then { request, response, string, idpRequestData -> Promise<NSMutableURLRequest> in
+		}.then { req, resp, string, idpRequestData -> Promise<NSMutableURLRequest> in
+			self.log.debug("(2/3) IdP request complete. Status: \(resp.statusCode)")
 			let idpResponseData = IdpResponseData(
 				requestData: idpRequestData,
-				response: response,
+				response: resp,
 				body: string
 			)
 			return self.buildSpRequest(idpResponseData)
 		}.then { spRequest -> Promise<(NSURLRequest, NSHTTPURLResponse, String)> in
-			// Make the final request to the SP's ECP endpoint
+			self.log.debug("(3/3) Building final SP request.")
 			let request = Alamofire.request(spRequest)
  			return request.responseString()
 		}
@@ -73,6 +86,7 @@ public struct ECP {
 			forHTTPHeaderField: "PAOS"
 		)
 		request.timeoutInterval = 10
+		self.log.debug("Built initial SP request.")
 		return request
 	}
 
@@ -88,6 +102,7 @@ public struct ECP {
 				
 				// Remove the XML signature
 				xml.root["S:Body"]["samlp:AuthnRequest"]["ds:Signature"].removeFromParent()
+				self.log.debug("Removed the XML signature from the SP SOAP response.")
 				
 				// Store this so we can compare it against the AssertionConsumerServiceURL from the IdP
 				let responseConsumerURLString = xml.root["S:Header"]["paos:Request"]
@@ -97,9 +112,17 @@ public struct ECP {
 					rcuString = responseConsumerURLString,
 					responseConsumerURL = NSURL(string: rcuString)
 				{
+					self.log.debug("Found the ResponseConsumerURL in the SP SOAP response.")
+					
 					// Get the SP request's RelayState for later
 					// This may or may not exist depending on the SP/IDP
 					let relayState = xml.root["S:Header"]["ecp:RelayState"].first
+					
+					if relayState != nil {
+						self.log.debug("SP SOAP response contains RelayState.")
+					} else {
+						self.log.warning("No RelayState present in the SP SOAP response.")
+					}
 					
 					// Get the IdP's URL
 					let idpURLString = xml.root["S:Body"]["samlp:AuthnRequest"]["samlp:Scoping"]["samlp:IDPList"]["samlp:IDPEntry"]
@@ -110,6 +133,7 @@ public struct ECP {
 						idpHost = idpURL.host,
 						idpEcpURL = NSURL(string: "https://\(idpHost)/idp/profile/SAML2/SOAP/ECP")
 					{
+						self.log.debug("Found IdP URL in the SP SOAP response.")
 						// Make a new SOAP envelope with the SP's SOAP body only
 						let body = xml.root["S:Body"]
 						let soapDocument = AEXMLDocument()
@@ -136,7 +160,8 @@ public struct ECP {
 									forHTTPHeaderField: "Authorization"
 								)
 								idpReq.timeoutInterval = 10
-								println(envelope.xmlString)
+								self.log.debug("Built first IdP request.")
+								
 								return fulfill(IdpRequestData(
 									request: idpReq,
 									responseConsumerURL: responseConsumerURL,
@@ -169,6 +194,7 @@ public struct ECP {
 						.attributes["AssertionConsumerServiceURL"] as? String,
 					assertionConsumerServiceURL = NSURL(string: acuString)
 				{
+					self.log.debug("Found AssertionConsumerServiceURL in IdP SOAP response.")
 					
 					// Make a new SOAP envelope with the following:
 					//     - (optional) A SOAP Header containing the RelayState from the first SP response
@@ -188,6 +214,7 @@ public struct ECP {
 					if let relay = idpResponseData.requestData.relayState {
 						let header = envelope.addChild(name: "S:Header")
 						let relayElement = header.addChild(relay)
+						self.log.debug("Added RelayState to the SOAP header for the final SP request.")
 					}
 					
 					let body = xml.root["soap11:Body"]
@@ -221,6 +248,7 @@ public struct ECP {
 							)
 							spReq.timeoutInterval = 10
 
+							self.log.debug("Built final SP request.")
 							return fulfill(spReq)
 						}
 						return reject(Error.MissingBasicAuth.error)
@@ -238,13 +266,13 @@ public struct ECP {
 		Alamofire.Manager.sharedInstance.request(request)
 			.responseString { (request, response, string, error) in
 				if let err = error {
-					println("Error sending SOAP fault:")
-					println(err)
+					self.log.warning("Error sending SOAP fault:")
+					self.log.warning(err.localizedDescription)
 				}
 				if let body = string {
-					println(body)
+					self.log.debug(body)
 				} else {
-					println("Empty response from SOAP fault request.")
+					self.log.warning("Empty response from SOAP fault request.")
 				}
 		}
 	}

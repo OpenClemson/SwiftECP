@@ -11,7 +11,8 @@ class ViewController: UIViewController {
 			password: "nothing",
 			protectedURL: NSURL(
 				string: "https://app.university.edu/protected"
-			)!
+			)!,
+			logLevel: .Debug
 		).login().then { request, response, body -> Void in
 			println(body)
 			
