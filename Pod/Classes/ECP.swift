@@ -10,7 +10,7 @@ public struct ECP {
 	var basicAuth: String? {
 		get {
 			return ("\(username):\(password)" as NSString)
-				.dataUsingEncoding(NSUTF8StringEncoding)?
+				.dataUsingEncoding(NSASCIIStringEncoding)?
 				.base64EncodedStringWithOptions(nil)
 		}
 	}
