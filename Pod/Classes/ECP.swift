@@ -1,7 +1,7 @@
 import Foundation
 import Alamofire
 import AEXML
-import PromiseKit
+import ReactiveCocoa
 import XCGLogger
 
 public struct ECP {
@@ -11,19 +11,24 @@ public struct ECP {
 		get {
 			return ("\(username):\(password)" as NSString)
 				.dataUsingEncoding(NSASCIIStringEncoding)?
-				.base64EncodedStringWithOptions(nil)
+				.base64EncodedStringWithOptions([])
 		}
 	}
 	public let protectedURL: NSURL
 	
 	let log = XCGLogger.defaultInstance()
 	
-	public init(username: String, password: String, protectedURL: NSURL, logLevel: XCGLogger.LogLevel) {
+	public init(
+        username: String,
+        password: String,
+        protectedURL: NSURL,
+        logLevel: XCGLogger.LogLevel
+    ) {
 		self.username = username
 		self.password = password
 		self.protectedURL = protectedURL
 		log.setup(
-			logLevel: logLevel,
+			logLevel,
 			showLogLevel: true,
 			showFileNames: true,
 			showLineNumbers: true,
@@ -37,246 +42,264 @@ public struct ECP {
 		let responseConsumerURL: NSURL
 		let relayState: AEXMLElement?
 	}
-	
-	struct IdpResponseData {
-		let requestData: IdpRequestData
-		let response: NSHTTPURLResponse
-		let body: String
+
+    public func login() -> SignalProducer<String, NSError> {
+        let req = Alamofire.request(self.buildInitialRequest())
+        return req.responseXML()
+        .flatMap(.Concat) { self.sendIdpRequest($0.value) }
+        .flatMap(.Concat) { self.sendSpRequest($0.0.value, idpRequestData: $0.1) }
+    }
+
+    func sendIdpRequest(
+        initialSpResponse: AEXMLDocument
+    ) -> SignalProducer<(CheckedResponse<AEXMLDocument>, IdpRequestData), NSError> {
+        return SignalProducer { observer, disposable in
+            do {
+                let idpRequestData = try self.buildIdpRequest(initialSpResponse)
+                let req = Alamofire.request(idpRequestData.request)
+                req.responseXML().map { ($0, idpRequestData) }.start { event in
+                    switch event {
+                    case .Next(let value):
+                        sendNext(observer, value)
+                        sendCompleted(observer)
+                    case .Error(let error):
+                        sendError(observer, error)
+                    default:
+                        break
+                    }
+                }
+            } catch {
+                sendError(observer, error as NSError)
+            }
+        }
+    }
+
+    func sendSpRequest(
+        document: AEXMLDocument,
+        idpRequestData: IdpRequestData
+    ) -> SignalProducer<String, NSError> {
+        return SignalProducer { observer, disposable in
+            do {
+                let request = try self.buildSpRequest(
+                    document,
+                    idpRequestData: idpRequestData
+                )
+
+                let req = Alamofire.request(request)
+                req.responseString(false).map { $0.value }.start { event in
+                    switch event {
+                    case .Next(let value):
+                        sendNext(observer, value)
+                        sendCompleted(observer)
+                    case .Error(let error):
+                        sendError(observer, error)
+                    default:
+                        break
+                    }
+                }
+            } catch {
+                sendError(observer, error as NSError)
+            }
+        }
+    }
+
+    func buildInitialRequest() -> NSMutableURLRequest {
+        // Create a request with the appropriate headers to trigger ECP on the SP.
+        let request = NSMutableURLRequest(URL: self.protectedURL)
+        request.setValue(
+            "text/html; application/vnd.paos+xml",
+            forHTTPHeaderField: "Accept"
+        )
+        request.setValue(
+            "ver=\"urn:liberty:paos:2003-08\";\"urn:oasis:names:tc:SAML:2.0:profiles:SSO:ecp\"",
+            forHTTPHeaderField: "PAOS"
+        )
+        request.timeoutInterval = 10
+        log.debug("Built initial SP request.")
+        return request
+    }
+
+    func buildIdpRequest(body: AEXMLDocument) throws -> IdpRequestData {
+        log.debug("Initial SP SOAP response:")
+        log.debug(body.xmlString)
+
+        // Remove the XML signature
+        body.root["S:Body"]["samlp:AuthnRequest"]["ds:Signature"].removeFromParent()
+        log.debug("Removed the XML signature from the SP SOAP response.")
+        
+        // Store this so we can compare it against the AssertionConsumerServiceURL from the IdP
+        let responseConsumerURLString = body.root["S:Header"]["paos:Request"]
+            .attributes["responseConsumerURL"]
+
+        guard let
+            rcuString = responseConsumerURLString,
+            responseConsumerURL = NSURL(string: rcuString)
+        else {
+            throw Error.ResponseConsumerURL
+        }
+
+        log.debug("Found the ResponseConsumerURL in the SP SOAP response.")
+        
+        // Get the SP request's RelayState for later
+        // This may or may not exist depending on the SP/IDP
+        let relayState = body.root["S:Header"]["ecp:RelayState"].first
+        
+        if relayState != nil {
+            log.debug("SP SOAP response contains RelayState.")
+        } else {
+            log.warning("No RelayState present in the SP SOAP response.")
+        }
+        
+        // Get the IdP's URL
+        let idpURLString = body.root["S:Body"]["samlp:AuthnRequest"]["samlp:Scoping"]["samlp:IDPList"]["samlp:IDPEntry"]
+            .attributes["ProviderID"]
+
+        guard let
+            idp = idpURLString,
+            idpURL = NSURL(string: idp),
+            idpHost = idpURL.host,
+            idpEcpURL = NSURL(string: "https://\(idpHost)/idp/profile/SAML2/SOAP/ECP")
+        else {
+            throw Error.IdpExtraction
+        }
+
+        log.debug("Found IdP URL in the SP SOAP response.")
+        // Make a new SOAP envelope with the SP's SOAP body only
+        let body = body.root["S:Body"]
+        let soapDocument = AEXMLDocument()
+        let soapAttributes = [
+            "xmlns:S": "http://schemas.xmlsoap.org/soap/envelope/"
+        ]
+        let envelope = soapDocument.addChild(
+            name: "S:Envelope",
+            attributes: soapAttributes
+        )
+        envelope.addChild(body)
+
+        guard let soapString = envelope.xmlString.dataUsingEncoding(NSUTF8StringEncoding) else {
+            throw Error.SoapGeneration
+        }
+
+        guard let basicAuth = self.basicAuth else {
+            throw Error.MissingBasicAuth
+        }
+
+        log.debug("Sending this SOAP to the IDP:")
+        log.debug(envelope.xmlString)
+
+        let idpReq = NSMutableURLRequest(URL: idpEcpURL)
+        idpReq.HTTPMethod = "POST"
+        idpReq.HTTPBody = soapString
+        idpReq.setValue(
+            "application/vnd.paos+xml",
+            forHTTPHeaderField: "Content-Type"
+        )
+        idpReq.setValue(
+            "Basic " + basicAuth,
+            forHTTPHeaderField: "Authorization"
+        )
+        idpReq.timeoutInterval = 10
+        log.debug("Built first IdP request.")
+        
+        return IdpRequestData(
+            request: idpReq,
+            responseConsumerURL: responseConsumerURL,
+            relayState: relayState
+        )
 	}
 	
-	public func login() -> Promise<(NSURLRequest, NSHTTPURLResponse, String)> {
-		// TODO: Directly chain the Alamofire requests after compiler
-		// bug gets fixed: https://github.com/mxcl/PromiseKit/issues/198
-		let request = Alamofire.request(self.buildInitialRequest())
-		return request.responseString()
-		.then { req, resp, string -> Promise<IdpRequestData> in
-			self.log.debug("(1/3) Initial SP request complete. Status: \(resp.statusCode).")
-			return self.buildIdpRequest(string)
-		}.then { idpRequestData -> Promise<(NSURLRequest, NSHTTPURLResponse, String, IdpRequestData)> in
-			return Promise { fulfill, reject in
-				let request = Alamofire.request(idpRequestData.request)
-				request.responseString().then {
-					fulfill($0, $1, $2, idpRequestData)
-				}
-			}
-		}.then { req, resp, string, idpRequestData -> Promise<NSMutableURLRequest> in
-			self.log.debug("(2/3) IdP request complete. Status: \(resp.statusCode)")
-			let idpResponseData = IdpResponseData(
-				requestData: idpRequestData,
-				response: resp,
-				body: string
-			)
-			return self.buildSpRequest(idpResponseData)
-		}.then { spRequest -> Promise<(NSURLRequest, NSHTTPURLResponse, String)> in
-			self.log.debug("(3/3) Building final SP request.")
-			let request = Alamofire.request(spRequest)
- 			return request.responseString()
-		}
-	}
+    func buildSpRequest(body: AEXMLDocument, idpRequestData: IdpRequestData) throws -> NSMutableURLRequest {
+        log.debug("IDP SOAP response:")
+        log.debug(body.xmlString)
 
-	func buildInitialRequest() -> NSMutableURLRequest {
-		// Create a request with the appropriate headers to trigger ECP on the SP.
-		let request = NSMutableURLRequest(URL: self.protectedURL)
-		request.setValue(
-			"text/html; application/vnd.paos+xml",
-			forHTTPHeaderField: "Accept"
-		)
-		request.setValue(
-			"ver=\"urn:liberty:paos:2003-08\";\"urn:oasis:names:tc:SAML:2.0:profiles:SSO:ecp\"",
-			forHTTPHeaderField: "PAOS"
-		)
-		request.timeoutInterval = 10
-		self.log.debug("Built initial SP request.")
-		return request
-	}
+        guard let
+            acuString = body.root["soap11:Header"]["ecp:Response"]
+                .attributes["AssertionConsumerServiceURL"],
+            assertionConsumerServiceURL = NSURL(string: acuString)
+        else {
+            throw Error.AssertionConsumerServiceURL
+        }
 
-	func buildIdpRequest(body: String) -> Promise<IdpRequestData> {
-		return Promise { fulfill, reject in
-			var error: NSError?
-			if let
-				xmlData = body.dataUsingEncoding(NSUTF8StringEncoding),
-				xml = AEXMLDocument(xmlData: xmlData, error: &error)
-			{
-				// Bust out if there's an XML parse error
-				if let err = error { reject(err); return }
-				
-				// Remove the XML signature
-				xml.root["S:Body"]["samlp:AuthnRequest"]["ds:Signature"].removeFromParent()
-				self.log.debug("Removed the XML signature from the SP SOAP response.")
-				
-				// Store this so we can compare it against the AssertionConsumerServiceURL from the IdP
-				let responseConsumerURLString = xml.root["S:Header"]["paos:Request"]
-					.attributes["responseConsumerURL"] as? String
-				
-				if let
-					rcuString = responseConsumerURLString,
-					responseConsumerURL = NSURL(string: rcuString)
-				{
-					self.log.debug("Found the ResponseConsumerURL in the SP SOAP response.")
-					
-					// Get the SP request's RelayState for later
-					// This may or may not exist depending on the SP/IDP
-					let relayState = xml.root["S:Header"]["ecp:RelayState"].first
-					
-					if relayState != nil {
-						self.log.debug("SP SOAP response contains RelayState.")
-					} else {
-						self.log.warning("No RelayState present in the SP SOAP response.")
-					}
-					
-					// Get the IdP's URL
-					let idpURLString = xml.root["S:Body"]["samlp:AuthnRequest"]["samlp:Scoping"]["samlp:IDPList"]["samlp:IDPEntry"]
-						.attributes["ProviderID"] as? String
-					if let
-						idp = idpURLString,
-						idpURL = NSURL(string: idp),
-						idpHost = idpURL.host,
-						idpEcpURL = NSURL(string: "https://\(idpHost)/idp/profile/SAML2/SOAP/ECP")
-					{
-						self.log.debug("Found IdP URL in the SP SOAP response.")
-						// Make a new SOAP envelope with the SP's SOAP body only
-						let body = xml.root["S:Body"]
-						let soapDocument = AEXMLDocument()
-						let soapAttributes = [
-							"xmlns:S": "http://schemas.xmlsoap.org/soap/envelope/"
-						]
-						let envelope = soapDocument.addChild(
-							name: "S:Envelope",
-							attributes: soapAttributes
-						)
-						envelope.addChild(body)
+        log.debug("Found AssertionConsumerServiceURL in IdP SOAP response.")
+        
+        // Make a new SOAP envelope with the following:
+        //     - (optional) A SOAP Header containing the RelayState from the first SP response
+        //     - The SOAP body of the IDP response
+        let spSoapDocument = AEXMLDocument()
+        
+        // XML namespaces are just...lovely
+        let spSoapAttributes = [
+            "xmlns:S": "http://schemas.xmlsoap.org/soap/envelope/",
+            "xmlns:soap11": "http://schemas.xmlsoap.org/soap/envelope/"
+        ]
+        let envelope = spSoapDocument.addChild(
+            name: "S:Envelope",
+            attributes: spSoapAttributes
+        )
 
-						if let soapString = envelope.xmlString.dataUsingEncoding(NSUTF8StringEncoding) {
-							if let basicAuth = self.basicAuth {
-								let idpReq = NSMutableURLRequest(URL: idpEcpURL)
-								idpReq.HTTPMethod = "POST"
-								idpReq.HTTPBody = soapString
-								idpReq.setValue(
-									"application/vnd.paos+xml",
-									forHTTPHeaderField: "Content-Type"
-								)
-								idpReq.setValue(
-									"Basic " + basicAuth,
-									forHTTPHeaderField: "Authorization"
-								)
-								idpReq.timeoutInterval = 10
-								self.log.debug("Built first IdP request.")
-								
-								return fulfill(IdpRequestData(
-									request: idpReq,
-									responseConsumerURL: responseConsumerURL,
-									relayState: relayState
-								))
-							}
-							return reject(Error.MissingBasicAuth.error)
-						}
-						return reject(Error.SoapGeneration.error)
-					}
-					return reject(Error.IdpExtraction.error)
-				}
-				return reject(Error.ResponseConsumerURL.error)
-			}
-			return reject(Error.WTF.error) // is this even reachable?
-		}
-	}
-	
-	func buildSpRequest(idpResponseData: IdpResponseData) -> Promise<NSMutableURLRequest> {
-		return Promise { fulfill, reject in
-			var xmlError: NSError?
-			if let
-				xmlData = idpResponseData.body.dataUsingEncoding(NSUTF8StringEncoding),
-				xml = AEXMLDocument(xmlData: xmlData, error: &xmlError)
-			{
-				if let err = xmlError { reject(err); return }
-				
-				if let
-					acuString = xml.root["soap11:Header"]["ecp:Response"]
-						.attributes["AssertionConsumerServiceURL"] as? String,
-					assertionConsumerServiceURL = NSURL(string: acuString)
-				{
-					self.log.debug("Found AssertionConsumerServiceURL in IdP SOAP response.")
-					
-					// Make a new SOAP envelope with the following:
-					//     - (optional) A SOAP Header containing the RelayState from the first SP response
-					//     - The SOAP body of the IDP response
-					let spSoapDocument = AEXMLDocument()
-					
-					// XML namespaces are just...lovely
-					let spSoapAttributes = [
-						"xmlns:S": "http://schemas.xmlsoap.org/soap/envelope/",
-						"xmlns:soap11": "http://schemas.xmlsoap.org/soap/envelope/"
-					]
-					let envelope = spSoapDocument.addChild(
-						name: "S:Envelope",
-						attributes: spSoapAttributes
-					)
-					
-					if let relay = idpResponseData.requestData.relayState {
-						let header = envelope.addChild(name: "S:Header")
-						let relayElement = header.addChild(relay)
-						self.log.debug("Added RelayState to the SOAP header for the final SP request.")
-					}
-					
-					let body = xml.root["soap11:Body"]
-					envelope.addChild(body)
-					
-					if let bodyData = envelope.xmlString.dataUsingEncoding(NSUTF8StringEncoding) {
-						// Bail out if these don't match
-						if idpResponseData.requestData.responseConsumerURL.URLString != assertionConsumerServiceURL.URLString {
-							if let request = self.buildSoapFaultRequest(
-								idpResponseData.requestData.responseConsumerURL,
-								error: Error.Security.error
-							) {
-								// We don't care about the results of the SOAP
-								// fault request, the spec just requires us to send it
-								self.sendSpSoapFaultRequest(request)
-							}
-							reject(Error.Security.error); return
-						}
-						
-						if let basicAuth = self.basicAuth {
-							let spReq = NSMutableURLRequest(URL: assertionConsumerServiceURL)
-							spReq.HTTPMethod = "POST"
-							spReq.HTTPBody = bodyData
-							spReq.setValue(
-								"application/vnd.paos+xml",
-								forHTTPHeaderField: "Content-Type"
-							)
-							spReq.setValue(
-								"Basic " + basicAuth,
-								forHTTPHeaderField: "Authorization"
-							)
-							spReq.timeoutInterval = 10
+        // Bail out if these don't match
+        guard
+            idpRequestData.responseConsumerURL.URLString ==
+                assertionConsumerServiceURL.URLString
+            else {
+                if let request = buildSoapFaultRequest(
+                    idpRequestData.responseConsumerURL,
+                    error: Error.Security.error
+                    ) {
+                        sendSpSoapFaultRequest(request)
+                }
+                throw Error.Security
+        }
 
-							self.log.debug("Built final SP request.")
-							return fulfill(spReq)
-						}
-						return reject(Error.MissingBasicAuth.error)
-					}
-					return reject(Error.SoapGeneration.error)
-				}
-				return reject(Error.AssertionConsumerServiceURL.error)
-			}
-			return reject(Error.EmptyBody.error)
-		}
+        if let relay = idpRequestData.relayState {
+            let header = envelope.addChild(name: "S:Header")
+            header.addChild(relay)
+            log.debug("Added RelayState to the SOAP header for the final SP request.")
+        }
+        
+        let extractedBody = body.root["soap11:Body"]
+        envelope.addChild(extractedBody)
+
+        guard let bodyData = envelope.xmlString.dataUsingEncoding(NSUTF8StringEncoding) else {
+            throw Error.SoapGeneration
+        }
+
+        guard let basicAuth = self.basicAuth else {
+            throw Error.MissingBasicAuth
+        }
+
+        log.debug("Sending this SOAP to the SP:")
+        log.debug(envelope.xmlString)
+
+        let spReq = NSMutableURLRequest(URL: assertionConsumerServiceURL)
+        spReq.HTTPMethod = "POST"
+        spReq.HTTPBody = bodyData
+        spReq.setValue(
+            "application/vnd.paos+xml",
+            forHTTPHeaderField: "Content-Type"
+        )
+        spReq.setValue(
+            "Basic " + basicAuth,
+            forHTTPHeaderField: "Authorization"
+        )
+        spReq.timeoutInterval = 10
+
+        log.debug("Built final SP request.")
+        return spReq
 	}
 	
 	// Something the spec wants but we don't need. Fire and forget.
 	func sendSpSoapFaultRequest(request: NSMutableURLRequest) {
-		Alamofire.Manager.sharedInstance.request(request)
-			.responseString { (request, response, string, error) in
-				if let err = error {
-					self.log.warning("Error sending SOAP fault:")
-					self.log.warning(err.localizedDescription)
-				}
-				if let body = string {
-					self.log.debug(body)
-				} else {
-					self.log.warning("Empty response from SOAP fault request.")
-				}
-		}
+		let request = Alamofire.request(request)
+        request.responseString { response in
+            if let value = response.result.value {
+                self.log.debug(value)
+            } else if let error = response.result.error {
+                self.log.warning(error.localizedDescription)
+            }
+        }
 	}
-	
+
 	func buildSoapFaultBody(error: NSError) -> NSData? {
 		let soapDocument = AEXMLDocument()
 		let soapAttribute = [
@@ -288,8 +311,8 @@ public struct ECP {
 		)
 		let body = envelope.addChild(name: "SOAP-ENV:Body")
 		let fault = body.addChild(name: "SOAP-ENV:Fault")
-		let faultCode = fault.addChild(name: "faultcode", value: String(error.code))
-		let faultString = fault.addChild(name: "faultstring", value: error.localizedDescription)
+		fault.addChild(name: "faultcode", value: String(error.code))
+		fault.addChild(name: "faultstring", value: error.localizedDescription)
 		return soapDocument.xmlString.dataUsingEncoding(NSUTF8StringEncoding)
 	}
 	
@@ -309,7 +332,7 @@ public struct ECP {
 		return nil
 	}
 	
-	enum Error: Printable {
+	enum Error: ErrorType {
 		case Extraction
 		case EmptyBody
 		case SoapGeneration
