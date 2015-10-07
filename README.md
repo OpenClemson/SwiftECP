@@ -14,10 +14,10 @@ Use the 2.0.0 beta releases if you're using Swift 2.0. For Swift 1.2, use 1.2.2.
 
 ```swift
 ECP(
-    username: "tpthomp",
-    password: "Tunnel1.recitalistcu",
+    username: "YOUR_USERNAME",
+    password: "YOUR_PASSWORD",
     protectedURL: NSURL(
-        string: "https://my.clemson.edu/srv/broker/protected/noop.php"
+        string: "https://app.university.edu"
     )!,
     logLevel: .Debug
 ).login().start { event in

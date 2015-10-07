@@ -7,10 +7,10 @@ class ViewController: UIViewController {
         super.viewDidLoad()
 		
         ECP(
-            username: "tpthomp",
-            password: "Tunnel1.recitalistcu",
+            username: "YOUR_USERNAME",
+            password: "YOUR_PASSWORD",
             protectedURL: NSURL(
-                string: "https://my.clemson.edu/srv/broker/protected/noop.php"
+                string: "https://app.university.edu"
             )!,
             logLevel: .Debug
         ).login().start { event in
