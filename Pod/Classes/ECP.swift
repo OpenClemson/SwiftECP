@@ -60,16 +60,16 @@ public struct ECP {
                 req.responseXML().map { ($0, idpRequestData) }.start { event in
                     switch event {
                     case .Next(let value):
-                        sendNext(observer, value)
-                        sendCompleted(observer)
-                    case .Error(let error):
-                        sendError(observer, error)
+                        observer.sendNext(value)
+                        observer.sendCompleted()
+                    case .Failed(let error):
+                        observer.sendFailed(error)
                     default:
                         break
                     }
                 }
             } catch {
-                sendError(observer, error as NSError)
+                observer.sendFailed(error as NSError)
             }
         }
     }
@@ -89,16 +89,16 @@ public struct ECP {
                 req.responseString(false).map { $0.value }.start { event in
                     switch event {
                     case .Next(let value):
-                        sendNext(observer, value)
-                        sendCompleted(observer)
-                    case .Error(let error):
-                        sendError(observer, error)
+                        observer.sendNext(value)
+                        observer.sendCompleted()
+                    case .Failed(let error):
+                        observer.sendFailed(error)
                     default:
                         break
                     }
                 }
             } catch {
-                sendError(observer, error as NSError)
+                observer.sendFailed(error as NSError)
             }
         }
     }

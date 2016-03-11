@@ -55,52 +55,50 @@ extension Alamofire.Request {
 
     public func responseXML() -> SignalProducer<CheckedResponse<AEXMLDocument>, NSError> {
         return SignalProducer { observer, disposable in
-            responseXML { response in
+            self.responseXML { response in
                 if let error = response.result.error {
-                    return sendError(observer, error)
+                    return observer.sendFailed(error)
                 }
 
                 guard let document = response.result.value else {
-                    return sendError(observer, AlamofireRACError.XMLSerialization as NSError)
+                    return observer.sendFailed(AlamofireRACError.XMLSerialization as NSError)
                 }
 
                 guard let request = response.request, response = response.response else {
-                    return sendError(observer, AlamofireRACError.IncompleteResponse as NSError)
+                    return observer.sendFailed(AlamofireRACError.IncompleteResponse as NSError)
                 }
 
-                sendNext(
-                    observer,
+                observer.sendNext(
                     CheckedResponse<AEXMLDocument>(
                         request: request, response: response, value: document
                     )
                 )
-                sendCompleted(observer)
+                observer.sendCompleted()
             }
         }
     }
 
     public func responseString(errorOnNil: Bool = true) -> SignalProducer<CheckedResponse<String>, NSError> {
         return SignalProducer { observer, disposable in
-            responseStringEmptyAllowed { response in
+            self.responseStringEmptyAllowed { response in
                 if let error = response.result.error {
-                    return sendError(observer, error)
+                    return observer.sendFailed(error)
                 }
 
                 if errorOnNil && response.result.value?.characters.count == 0 {
-                    return sendError(observer, AlamofireRACError.XMLSerialization as NSError)
+                    return observer.sendFailed(AlamofireRACError.XMLSerialization as NSError)
                 }
 
                 guard let req = response.request, resp = response.response else {
-                    return sendError(observer, AlamofireRACError.IncompleteResponse as NSError)
+                    return observer.sendFailed(AlamofireRACError.IncompleteResponse as NSError)
                 }
 
-                sendNext(
-                    observer,
+                observer.sendNext(
                     CheckedResponse<String>(
                         request: req, response: resp, value: response.result.value ?? ""
                     )
                 )
-                sendCompleted(observer)
+                observer.sendCompleted()
             }
         }
     }
