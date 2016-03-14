@@ -57,11 +57,37 @@ public struct ECP {
             do {
                 let idpRequestData = try self.buildIdpRequest(initialSpResponse)
                 let req = Alamofire.request(idpRequestData.request)
-                req.responseXML().map { ($0, idpRequestData) }.start { event in
+                req.responseString().map { ($0, idpRequestData) }.start { event in
                     switch event {
                     case .Next(let value):
-                        observer.sendNext(value)
+
+                        let stringResponse = value.0
+
+                        guard case 200 ... 299 = stringResponse.response.statusCode else {
+                            self.log.debug("Received \(stringResponse.response.statusCode) response from IdP")
+                            observer.sendFailed(Error.IdpRequestFailed.error)
+                            break
+                        }
+
+                        guard let responseData = stringResponse.value.dataUsingEncoding(NSUTF8StringEncoding) else {
+                            observer.sendFailed(Error.XMLSerialization.error)
+                            break
+                        }
+
+                        guard let responseXML = try? AEXMLDocument(xmlData: responseData) else {
+                            observer.sendFailed(Error.XMLSerialization.error)
+                            break
+                        }
+
+                        let xmlResponse = CheckedResponse<AEXMLDocument>(
+                            request: stringResponse.request,
+                            response: stringResponse.response,
+                            value: responseXML
+                        )
+
+                        observer.sendNext((xmlResponse, value.1))
                         observer.sendCompleted()
+
                     case .Failed(let error):
                         observer.sendFailed(error)
                     default:
@@ -343,6 +369,8 @@ public struct ECP {
 		case Security
 		case MissingBasicAuth
 		case WTF
+        case IdpRequestFailed
+        case XMLSerialization
 		
 		private var domain: String {
 			return "edu.clemson.swiftecp"
@@ -370,6 +398,10 @@ public struct ECP {
 				return 208
 			case .WTF:
 				return 209
+            case .IdpRequestFailed:
+                return 210
+            case .XMLSerialization:
+                return 211
 			}
 		}
 		
@@ -377,6 +409,8 @@ public struct ECP {
 			switch self {
 			case .EmptyBody:
 				return "The password you entered is incorrect. Please try again."
+            case .IdpRequestFailed:
+                return "The password you entered is incorrect. Please try again."
 			default:
 				return "An unknown error occurred. Please let us know how you arrived at this error and we will fix the problem as soon as possible."
 			}
@@ -404,6 +438,10 @@ public struct ECP {
 				return "Could not generate basic auth from the given username and password."
 			case .WTF:
 				return "Unknown error. Please contact the library developer."
+            case .IdpRequestFailed:
+                return "IdP request failed. The given password is likely incorrect."
+            case .XMLSerialization:
+                return "Unable to serialize response to XML."
 			}
 		}
 		
