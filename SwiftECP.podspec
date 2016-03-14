@@ -19,7 +19,7 @@ Pod::Spec.new do |s|
   }
 
   s.dependency 'AEXML', '~> 2.0'
-  s.dependency 'Alamofire', '~> 3.0.0-beta.3'
+  s.dependency 'Alamofire', '~> 3.2.1'
   s.dependency 'ReactiveCocoa', '4.0.4-alpha-4'
   s.dependency 'XCGLogger', '~> 3.0'
 end

@@ -1,6 +1,6 @@
 PODS:
   - AEXML (2.1.0)
-  - Alamofire (3.0.1)
+  - Alamofire (3.2.1)
   - Nimble (3.1.0)
   - Quick (0.9.1)
   - ReactiveCocoa (4.0.4-alpha-4):
@@ -17,7 +17,7 @@ PODS:
   - Result (1.0.2)
   - SwiftECP (2.0.2):
     - AEXML (~> 2.0)
-    - Alamofire (~> 3.0.0-beta.3)
+    - Alamofire (~> 3.2.1)
     - ReactiveCocoa (= 4.0.4-alpha-4)
     - XCGLogger (~> 3.0)
   - XCGLogger (3.2)
@@ -33,12 +33,12 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   AEXML: 0e2f657fdc67e17905682a06d55583a863d80803
-  Alamofire: 2457e1b2e6c46bb05c3a598c542b7bfd08893775
+  Alamofire: f11d8624a05f5d39e0c99309b3e600a3ba64298a
   Nimble: 79d40f4d69d47314229bbabacaa02b8838c779b9
   Quick: a5221fc21788b6aeda934805e68b061839bc3165
   ReactiveCocoa: e459ea92099447802df20c4735e31e8139b06094
   Result: dd3dd71af3fa2e262f1a999e14fba2c25ec14f16
-  SwiftECP: cdb401698fdae671b29540030fa26f83430945b4
+  SwiftECP: df90efbf364bbec8d57da14973df3638d4a9ec13
   XCGLogger: da1f341f4bb8979db6e1df64232f04d9698402d4
 
 COCOAPODS: 0.39.0
