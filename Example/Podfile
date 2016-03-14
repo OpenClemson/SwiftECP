@@ -8,6 +8,6 @@ end
 target 'SwiftECP_Tests', :exclusive => true do
   pod "SwiftECP", :path => "../"
 
-  pod 'Quick', '~> 0.6.0'
-  pod 'Nimble', '2.0.0-rc.3'
+  pod 'Quick', '~> 0.9.1'
+  pod 'Nimble', '3.1.0'
 end

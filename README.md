@@ -39,7 +39,7 @@ ECP(
             print(shibCookie)
         }
 
-    case let .Error(error):
+    case let .Failed(error):
         // This is an NSError containing both a user-friendly message and a
         // technical debug message. This can help diagnose problems with your
         // SP, your IdP, or even this library :)

@@ -7,14 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0EAD66C463068797AE0C6200 /* Pods_SwiftECP_Tests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 98BD321E4BD4ED26F868ACE8 /* Pods_SwiftECP_Tests.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+		0EAD66C463068797AE0C6200 /* Pods_SwiftECP_Tests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 98BD321E4BD4ED26F868ACE8 /* Pods_SwiftECP_Tests.framework */; };
 		607FACD61AFB9204008FA782 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 607FACD51AFB9204008FA782 /* AppDelegate.swift */; };
 		607FACD81AFB9204008FA782 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 607FACD71AFB9204008FA782 /* ViewController.swift */; };
 		607FACDB1AFB9204008FA782 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 607FACD91AFB9204008FA782 /* Main.storyboard */; };
 		607FACDD1AFB9204008FA782 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 607FACDC1AFB9204008FA782 /* Images.xcassets */; };
 		607FACE01AFB9204008FA782 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 607FACDE1AFB9204008FA782 /* LaunchScreen.xib */; };
 		607FACEC1AFB9204008FA782 /* Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 607FACEB1AFB9204008FA782 /* Tests.swift */; };
-		654E97E369FCF1C5D518564F /* Pods_SwiftECP_Example.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C33543E2266143E823B25B1E /* Pods_SwiftECP_Example.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+		654E97E369FCF1C5D518564F /* Pods_SwiftECP_Example.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C33543E2266143E823B25B1E /* Pods_SwiftECP_Example.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
