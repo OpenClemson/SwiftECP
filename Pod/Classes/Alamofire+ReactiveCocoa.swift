@@ -1,7 +1,6 @@
 import Foundation
 import AEXML
 import Alamofire
-//import BrightFutures
 import ReactiveCocoa
 
 public struct CheckedResponse<T> {
