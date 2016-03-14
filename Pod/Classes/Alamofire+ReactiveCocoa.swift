@@ -86,7 +86,7 @@ extension Alamofire.Request {
                 }
 
                 if errorOnNil && response.result.value?.characters.count == 0 {
-                    return observer.sendFailed(AlamofireRACError.XMLSerialization as NSError)
+                    return observer.sendFailed(AlamofireRACError.IncompleteResponse as NSError)
                 }
 
                 guard let req = response.request, resp = response.response else {
