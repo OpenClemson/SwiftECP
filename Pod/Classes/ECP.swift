@@ -290,10 +290,6 @@ public struct ECP {
             throw Error.SoapGeneration
         }
 
-        guard let basicAuth = self.basicAuth else {
-            throw Error.MissingBasicAuth
-        }
-
         log.debug("Sending this SOAP to the SP:")
         log.debug(envelope.xmlString)
 
@@ -303,10 +299,6 @@ public struct ECP {
         spReq.setValue(
             "application/vnd.paos+xml",
             forHTTPHeaderField: "Content-Type"
-        )
-        spReq.setValue(
-            "Basic " + basicAuth,
-            forHTTPHeaderField: "Authorization"
         )
         spReq.timeoutInterval = 10
 
