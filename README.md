@@ -13,14 +13,14 @@ SwiftECP is a spec-conformant Shibboleth ECP client for iOS. Simply provide cred
 Use the 2.0.0 beta releases if you're using Swift 2.0. For Swift 1.2, use 1.2.2.
 
 ```swift
-ECP(
-    username: "YOUR_USERNAME",
-    password: "YOUR_PASSWORD",
-    protectedURL: NSURL(
-        string: "https://app.university.edu"
-    )!,
-    logLevel: .Debug
-).login().start { event in
+let username = "YOUR_USERNAME"
+let password = "YOUR_PASSWORD"
+let protectedURL = NSURL(
+    string: "https://app.university.edu"
+)!
+
+let client = ECP(logLevel: .Debug)
+client.login(protectedURL, username: username, password: password).start { event in
     switch event {
 
     case let .Next(body):

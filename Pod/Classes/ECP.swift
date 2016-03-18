@@ -4,29 +4,23 @@ import AEXML
 import ReactiveCocoa
 import XCGLogger
 
-public struct ECP {
-	public let username: String
-	public let password: String
-	var basicAuth: String? {
-		get {
-			return ("\(username):\(password)" as NSString)
-				.dataUsingEncoding(NSASCIIStringEncoding)?
-				.base64EncodedStringWithOptions([])
-		}
-	}
-	public let protectedURL: NSURL
-	
+func basicAuthHeader(username: String, password: String) -> String? {
+    let encodedUsernameAndPassword = ("\(username):\(password)" as NSString)
+        .dataUsingEncoding(NSASCIIStringEncoding)?
+        .base64EncodedStringWithOptions([])
+    guard encodedUsernameAndPassword != nil else {
+        return nil
+    }
+    return "Basic \(encodedUsernameAndPassword)"
+}
+
+public class ECP {
+
 	let log = XCGLogger.defaultInstance()
 	
 	public init(
-        username: String,
-        password: String,
-        protectedURL: NSURL,
         logLevel: XCGLogger.LogLevel
     ) {
-		self.username = username
-		self.password = password
-		self.protectedURL = protectedURL
 		log.setup(
 			logLevel,
 			showLogLevel: true,
@@ -43,28 +37,30 @@ public struct ECP {
 		let relayState: AEXMLElement?
 	}
 
-    public func login() -> SignalProducer<String, NSError> {
-        let req = Alamofire.request(self.buildInitialRequest())
+    public func login(protectedURL: NSURL, username: String, password: String) -> SignalProducer<String, NSError> {
+        let req = Alamofire.request(self.buildInitialRequest(protectedURL))
         return req.responseXML()
-        .flatMap(.Concat) { self.sendIdpRequest($0.value) }
+        .flatMap(.Concat) { self.sendIdpRequest($0.value, username: username, password: password) }
         .flatMap(.Concat) { self.sendSpRequest($0.0.value, idpRequestData: $0.1) }
     }
 
     func sendIdpRequest(
-        initialSpResponse: AEXMLDocument
+        initialSpResponse: AEXMLDocument,
+        username: String,
+        password: String
     ) -> SignalProducer<(CheckedResponse<AEXMLDocument>, IdpRequestData), NSError> {
         return SignalProducer { observer, disposable in
             do {
-                let idpRequestData = try self.buildIdpRequest(initialSpResponse)
+                let idpRequestData = try self.buildIdpRequest(initialSpResponse, username: username, password: password)
                 let req = Alamofire.request(idpRequestData.request)
-                req.responseString().map { ($0, idpRequestData) }.start { event in
+                req.responseString().map { ($0, idpRequestData) }.start { [weak self] event in
                     switch event {
                     case .Next(let value):
 
                         let stringResponse = value.0
 
                         guard case 200 ... 299 = stringResponse.response.statusCode else {
-                            self.log.debug("Received \(stringResponse.response.statusCode) response from IdP")
+                            self?.log.debug("Received \(stringResponse.response.statusCode) response from IdP")
                             observer.sendFailed(Error.IdpRequestFailed.error)
                             break
                         }
@@ -129,9 +125,9 @@ public struct ECP {
         }
     }
 
-    func buildInitialRequest() -> NSMutableURLRequest {
+    func buildInitialRequest(protectedURL: NSURL) -> NSMutableURLRequest {
         // Create a request with the appropriate headers to trigger ECP on the SP.
-        let request = NSMutableURLRequest(URL: self.protectedURL)
+        let request = NSMutableURLRequest(URL: protectedURL)
         request.setValue(
             "text/html; application/vnd.paos+xml",
             forHTTPHeaderField: "Accept"
@@ -145,7 +141,7 @@ public struct ECP {
         return request
     }
 
-    func buildIdpRequest(body: AEXMLDocument) throws -> IdpRequestData {
+    func buildIdpRequest(body: AEXMLDocument, username: String, password: String) throws -> IdpRequestData {
         log.debug("Initial SP SOAP response:")
         log.debug(body.xmlString)
 
@@ -206,7 +202,7 @@ public struct ECP {
             throw Error.SoapGeneration
         }
 
-        guard let basicAuth = self.basicAuth else {
+        guard let authorizationHeader = basicAuthHeader(username, password: password) else {
             throw Error.MissingBasicAuth
         }
 
@@ -221,9 +217,10 @@ public struct ECP {
             forHTTPHeaderField: "Content-Type"
         )
         idpReq.setValue(
-            "Basic " + basicAuth,
+            authorizationHeader,
             forHTTPHeaderField: "Authorization"
         )
+        log.debug(authorizationHeader)
         idpReq.timeoutInterval = 10
         log.debug("Built first IdP request.")
         

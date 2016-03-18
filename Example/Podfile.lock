@@ -15,7 +15,7 @@ PODS:
     - ReactiveCocoa/Core
     - Result (~> 1.0)
   - Result (1.0.2)
-  - SwiftECP (2.0.2):
+  - SwiftECP (3.0.0):
     - AEXML (~> 2.0)
     - Alamofire (~> 3.2.1)
     - ReactiveCocoa (= 4.0.4-alpha-4)
@@ -38,7 +38,7 @@ SPEC CHECKSUMS:
   Quick: a5221fc21788b6aeda934805e68b061839bc3165
   ReactiveCocoa: e459ea92099447802df20c4735e31e8139b06094
   Result: dd3dd71af3fa2e262f1a999e14fba2c25ec14f16
-  SwiftECP: 4f322b72b7d3531c7eb7c3048159aefc2e25d410
+  SwiftECP: ef1d30016e6e2c7b87fab804bca2141a1b0c6ed8
   XCGLogger: da1f341f4bb8979db6e1df64232f04d9698402d4
 
 PODFILE CHECKSUM: f650f0573d240c666d7f3d2833d6ec42eaec449d
