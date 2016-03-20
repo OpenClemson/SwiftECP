@@ -4,6 +4,7 @@ podfile: Example/Podfile
 before_install:
   - gem uninstall cocoapods
   - gem install cocoapods --pre
+  - pod setup
   - pod install --project-directory=Example
 install:
   - gem install xcpretty --no-rdoc --no-ri --no-document --quiet
