@@ -1,0 +1,9 @@
+language: objective-c
+osx_image: xcode7.3
+podfile: Example/Podfile
+before_install:
+  - gem install cocoapods --pre
+  - pod install --project-directory=Example
+script:
+  - set -o pipefail && xcodebuild test -workspace Example/${POD_NAME}.xcworkspace -scheme ${POD_NAME}-Example -sdk iphonesimulator ONLY_ACTIVE_ARCH=NO | xcpretty
+  - pod lib lint
