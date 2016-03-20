@@ -14,9 +14,6 @@ Pod::Spec.new do |s|
   s.requires_arc = true
 
   s.source_files = 'Pod/Classes/**/*'
-  s.resource_bundles = {
-    'SwiftECP' => ['Pod/Assets/*.png']
-  }
 
   s.dependency 'AEXML', '~> 2.0'
   s.dependency 'Alamofire', '~> 3.2.1'
