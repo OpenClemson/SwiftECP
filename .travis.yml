@@ -2,6 +2,7 @@ language: objective-c
 osx_image: xcode7.2
 podfile: Example/Podfile
 before_install:
+  - gem uninstall cocoapods
   - gem install cocoapods --pre
   - pod install --project-directory=Example
 install:
