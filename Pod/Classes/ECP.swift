@@ -25,7 +25,7 @@ func basicAuthHeader(username: String, password: String) -> String? {
     guard encodedUsernameAndPassword != nil else {
         return nil
     }
-    return "Basic \(encodedUsernameAndPassword)"
+    return "Basic \(encodedUsernameAndPassword!)"
 }
 
 public class ECP: ECPClient {
