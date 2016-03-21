@@ -4,7 +4,7 @@ import AEXML
 import ReactiveCocoa
 import XCGLogger
 
-func buildSpRequest(
+func buildFinalSPRequest(
     body: AEXMLDocument,
     idpRequestData: IdpRequestData,
     log: XCGLogger?
@@ -80,14 +80,14 @@ func buildSpRequest(
     return spReq
 }
 
-func sendSpRequest(
+func sendFinalSPRequest(
     document: AEXMLDocument,
     idpRequestData: IdpRequestData,
     log: XCGLogger?
 ) -> SignalProducer<String, NSError> {
     return SignalProducer { observer, disposable in
         do {
-            let request = try buildSpRequest(
+            let request = try buildFinalSPRequest(
                 document,
                 idpRequestData: idpRequestData,
                 log: log

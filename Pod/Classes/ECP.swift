@@ -40,24 +40,24 @@ public class ECP: ECPClient {
         username: String,
         password: String
     ) -> SignalProducer<String, NSError> {
-        let req = Alamofire.request(
+        return Alamofire.request(
             buildInitialSPRequest(protectedURL, log: log)
         )
-        return req.responseXML()
-            .flatMap(.Concat) { [weak self] in
-                sendIdpRequest(
-                    $0.value,
-                    username: username,
-                    password: password,
-                    log: self?.log
-                )
-            }
-            .flatMap(.Concat) { [weak self] in
-                sendSpRequest(
-                    $0.0.value,
-                    idpRequestData: $0.1,
-                    log: self?.log
-                )
-            }
+        .responseXML()
+        .flatMap(.Concat) { [weak self] in
+            sendIdpRequest(
+                $0.value,
+                username: username,
+                password: password,
+                log: self?.log
+            )
+        }
+        .flatMap(.Concat) { [weak self] in
+            sendFinalSPRequest(
+                $0.0.value,
+                idpRequestData: $0.1,
+                log: self?.log
+            )
+        }
     }
 }
