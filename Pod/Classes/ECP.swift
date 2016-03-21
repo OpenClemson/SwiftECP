@@ -41,7 +41,7 @@ public class ECP: ECPClient {
         password: String
     ) -> SignalProducer<String, NSError> {
         let req = Alamofire.request(
-            buildInitialRequest(protectedURL, log: log)
+            buildInitialSPRequest(protectedURL, log: log)
         )
         return req.responseXML()
             .flatMap(.Concat) { [weak self] in

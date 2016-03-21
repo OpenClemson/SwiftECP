@@ -1,7 +1,7 @@
 import Foundation
 import XCGLogger
 
-func buildInitialRequest(
+func buildInitialSPRequest(
     protectedURL: NSURL,
     log: XCGLogger?
 ) -> NSMutableURLRequest {
