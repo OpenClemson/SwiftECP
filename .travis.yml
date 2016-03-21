@@ -12,6 +12,8 @@ install:
   - gem install xcpretty --no-rdoc --no-ri --no-document --quiet
 script:
   - swiftlint
-  - set -o pipefail && xcodebuild test -workspace Example/SwiftECP.xcworkspace -scheme SwiftECP-Example -destination 'platform=iOS Simulator,name=iPhone 6,OS=latest' ONLY_ACTIVE_ARCH=NO |
+  - set -o pipefail && xcodebuild test -workspace Example/SwiftECP.xcworkspace -scheme SwiftECP-Example -destination 'platform=iOS Simulator,name=iPhone 6,OS=latest' -enableCodeCoverage YES ONLY_ACTIVE_ARCH=NO GCC_INSTRUMENT_PROGRAM_FLOW_ARCS=YES GCC_GENERATE_TEST_COVERAGE_FILES=YES |
     xcpretty -c
   - pod lib lint --quick --allow-warnings
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
