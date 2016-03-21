@@ -14,11 +14,11 @@ class ViewController: UIViewController {
         let logger = XCGLogger()
         logger.setup(.Debug)
 
-        let client = ECP(logger: logger)
-        client.login(
+        ECPLogin(
             protectedURL,
             username: username,
-            password: password
+            password: password,
+            logger: logger
         ).start { event in
             switch event {
 

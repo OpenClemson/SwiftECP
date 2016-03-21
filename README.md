@@ -19,8 +19,10 @@ let protectedURL = NSURL(
     string: "https://app.university.edu"
 )!
 
-let client = ECP(logLevel: .Debug)
-client.login(protectedURL, username: username, password: password).start { event in
+let logger = XCGLogger()
+logger.setup(.Debug)
+
+ECPLogin(protectedURL, username: username, password: password, logger: logger).start { event in
     switch event {
 
     case let .Next(body):
