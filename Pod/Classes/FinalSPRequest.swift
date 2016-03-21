@@ -4,6 +4,9 @@ import AEXML
 import ReactiveCocoa
 import XCGLogger
 
+// swiftlint:disable:next todo
+// TODO: refactor this function, the length does smell
+// swiftlint:disable:next function_body_length
 func buildFinalSPRequest(
     body: AEXMLDocument,
     idpRequestData: IdpRequestData,
@@ -21,12 +24,12 @@ func buildFinalSPRequest(
     }
 
     log?.debug("Found AssertionConsumerServiceURL in IdP SOAP response.")
-    
+
     // Make a new SOAP envelope with the following:
     //     - (optional) A SOAP Header containing the RelayState from the first SP response
     //     - The SOAP body of the IDP response
     let spSoapDocument = AEXMLDocument()
-    
+
     // XML namespaces are just...lovely
     let spSoapAttributes = [
         "xmlns:S": "http://schemas.xmlsoap.org/soap/envelope/",
@@ -56,7 +59,7 @@ func buildFinalSPRequest(
         header.addChild(relay)
         log?.debug("Added RelayState to the SOAP header for the final SP request.")
     }
-    
+
     let extractedBody = body.root["soap11:Body"]
     envelope.addChild(extractedBody)
 

@@ -16,7 +16,9 @@ extension Alamofire.Request {
 
             guard let validData = data where validData.length > 0 else {
                 let failureReason = "Could not serialize data. Input data was nil or zero length."
-                let error = Error.errorWithCode(.DataSerializationFailed, failureReason: failureReason)
+                let error = Error.errorWithCode(
+                    .DataSerializationFailed, failureReason: failureReason
+                )
                 return .Failure(error)
             }
 
@@ -29,7 +31,8 @@ extension Alamofire.Request {
         }
     }
 
-    public static func emptyAllowedStringResponseSerializer() -> ResponseSerializer<String, NSError> {
+    public static func emptyAllowedStringResponseSerializer()
+        -> ResponseSerializer<String, NSError> {
         return ResponseSerializer { _, resp, data, error in
             guard error == nil else { return .Failure(error!) }
 
@@ -45,11 +48,19 @@ extension Alamofire.Request {
     }
 
     public func responseXML(completionHandler: Response<AEXMLDocument, NSError> -> Void) -> Self {
-        return response(responseSerializer: Request.XMLResponseSerializer(), completionHandler: completionHandler)
+        return response(
+            responseSerializer: Request.XMLResponseSerializer(),
+            completionHandler: completionHandler
+        )
     }
 
-    public func responseStringEmptyAllowed(completionHandler: Response<String, NSError> -> Void) -> Self {
-        return response(responseSerializer: Request.emptyAllowedStringResponseSerializer(), completionHandler: completionHandler)
+    public func responseStringEmptyAllowed(
+        completionHandler: Response<String, NSError> -> Void
+    ) -> Self {
+        return response(
+            responseSerializer: Request.emptyAllowedStringResponseSerializer(),
+            completionHandler: completionHandler
+        )
     }
 
     public func responseXML() -> SignalProducer<CheckedResponse<AEXMLDocument>, NSError> {
@@ -77,7 +88,9 @@ extension Alamofire.Request {
         }
     }
 
-    public func responseString(errorOnNil: Bool = true) -> SignalProducer<CheckedResponse<String>, NSError> {
+    public func responseString(
+        errorOnNil: Bool = true
+    ) -> SignalProducer<CheckedResponse<String>, NSError> {
         return SignalProducer { observer, disposable in
             self.responseStringEmptyAllowed { response in
                 if let error = response.result.error {

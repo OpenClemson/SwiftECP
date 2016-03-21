@@ -54,6 +54,7 @@ public enum ECPError: ErrorType {
         case .IdpRequestFailed:
             return "The password you entered is incorrect. Please try again."
         default:
+            // swiftlint:disable:next line_length
             return "An unknown error occurred. Please let us know how you arrived at this error and we will fix the problem as soon as possible."
         }
     }
@@ -86,7 +87,7 @@ public enum ECPError: ErrorType {
             return "Unable to serialize response to XML."
         }
     }
-    
+
     var error: NSError {
         return NSError(domain: domain, code: errorCode, userInfo: [
             NSLocalizedDescriptionKey: userMessage,

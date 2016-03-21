@@ -30,7 +30,7 @@ func basicAuthHeader(username: String, password: String) -> String? {
 
 public class ECP: ECPClient {
     let log: XCGLogger?
-	
+
 	public init(logger: XCGLogger? = nil) {
         self.log = logger
 	}

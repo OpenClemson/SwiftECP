@@ -44,7 +44,7 @@ func buildSoapFaultRequest(URL: NSURL, error: NSError) -> NSMutableURLRequest? {
             forHTTPHeaderField: "Content-Type"
         )
         request.timeoutInterval = 10
-        
+
         return request
     }
     return nil

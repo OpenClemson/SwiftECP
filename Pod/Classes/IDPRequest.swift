@@ -4,6 +4,9 @@ import Alamofire
 import ReactiveCocoa
 import XCGLogger
 
+// swiftlint:disable:next todo
+// TODO: refactor this function, the length does smell
+// swiftlint:disable:next function_body_length
 func buildIdpRequest(
     body: AEXMLDocument,
     username: String,
@@ -41,6 +44,7 @@ func buildIdpRequest(
     }
 
     // Get the IdP's URL
+    // swiftlint:disable:next line_length
     let idpURLString = body.root["S:Body"]["samlp:AuthnRequest"]["samlp:Scoping"]["samlp:IDPList"]["samlp:IDPEntry"]
         .attributes["ProviderID"]
 
@@ -121,12 +125,16 @@ func sendIdpRequest(
                     let stringResponse = value.0
 
                     guard case 200 ... 299 = stringResponse.response.statusCode else {
-                        log?.debug("Received \(stringResponse.response.statusCode) response from IdP")
+                        log?.debug(
+                            "Received \(stringResponse.response.statusCode) response from IdP"
+                        )
                         observer.sendFailed(ECPError.IdpRequestFailed.error)
                         break
                     }
 
-                    guard let responseData = stringResponse.value.dataUsingEncoding(NSUTF8StringEncoding) else {
+                    guard let responseData = stringResponse.value
+                        .dataUsingEncoding(NSUTF8StringEncoding)
+                    else {
                         observer.sendFailed(ECPError.XMLSerialization.error)
                         break
                     }
