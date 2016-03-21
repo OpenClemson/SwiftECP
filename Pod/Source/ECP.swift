@@ -10,16 +10,6 @@ struct IdpRequestData {
     let relayState: AEXMLElement?
 }
 
-func basicAuthHeader(username: String, password: String) -> String? {
-    let encodedUsernameAndPassword = ("\(username):\(password)" as NSString)
-        .dataUsingEncoding(NSASCIIStringEncoding)?
-        .base64EncodedStringWithOptions([])
-    guard encodedUsernameAndPassword != nil else {
-        return nil
-    }
-    return "Basic \(encodedUsernameAndPassword!)"
-}
-
 public func ECPLogin(
     protectedURL: NSURL,
     username: String,

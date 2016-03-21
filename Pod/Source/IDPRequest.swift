@@ -4,6 +4,16 @@ import Alamofire
 import ReactiveCocoa
 import XCGLogger
 
+func basicAuthHeader(username: String, password: String) -> String? {
+    let encodedUsernameAndPassword = ("\(username):\(password)" as NSString)
+        .dataUsingEncoding(NSASCIIStringEncoding)?
+        .base64EncodedStringWithOptions([])
+    guard encodedUsernameAndPassword != nil else {
+        return nil
+    }
+    return "Basic \(encodedUsernameAndPassword!)"
+}
+
 // swiftlint:disable:next todo
 // TODO: refactor this function, the length does smell
 // swiftlint:disable:next function_body_length
