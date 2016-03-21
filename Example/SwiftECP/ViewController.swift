@@ -1,8 +1,8 @@
 import UIKit
 import SwiftECP
+import XCGLogger
 
 class ViewController: UIViewController {
-
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -11,9 +11,15 @@ class ViewController: UIViewController {
         let protectedURL = NSURL(
             string: "https://app.university.edu"
         )!
+        let logger = XCGLogger()
+        logger.setup(.Debug)
 
-        let client = ECP(logLevel: .Debug)
-        client.login(protectedURL, username: username, password: password).start { event in
+        let client = ECP(logger: logger)
+        client.login(
+            protectedURL,
+            username: username,
+            password: password
+        ).start { event in
             switch event {
 
             case let .Next(body):
@@ -28,7 +34,7 @@ class ViewController: UIViewController {
                 if let cookies = NSHTTPCookieStorage.sharedHTTPCookieStorage().cookies {
                     let shibCookie = cookies.filter { (cookie: NSHTTPCookie) in
                         cookie.name.rangeOfString("shibsession") != nil
-                        }[0]
+                    }[0]
                     print(shibCookie)
                 }
 
