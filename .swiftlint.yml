@@ -1,0 +1,4 @@
+included:
+  - Pod/Source
+  - Example/SwiftECP
+  - Example/Tests
