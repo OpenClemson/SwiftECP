@@ -1,8 +1,9 @@
-import Alamofire
-import Foundation
+import Result
 import AEXML
-import ReactiveCocoa
+import Alamofire
 import XCGLogger
+import Foundation
+import ReactiveSwift
 
 // swiftlint:disable:next todo
 // TODO: refactor this function, the length does smell
@@ -11,23 +12,25 @@ func buildFinalSPRequest(
     body: AEXMLDocument,
     idpRequestData: IdpRequestData,
     log: XCGLogger?
-) throws -> NSMutableURLRequest {
+) throws -> URLRequest {
     log?.debug("IDP SOAP response:")
-    log?.debug(body.xmlString)
+    log?.debug(body.xmlString(trimWhiteSpace: false, format: false))
 
-    guard let
-        acuString = body.root["soap11:Header"]["ecp:Response"]
+    guard
+        let acuString = body.root["soap11:Header"]["ecp:Response"]
             .attributes["AssertionConsumerServiceURL"],
-        assertionConsumerServiceURL = NSURL(string: acuString)
+        let assertionConsumerServiceURL = URL(string: acuString)
     else {
-        throw ECPError.AssertionConsumerServiceURL
+        throw ECPError.assertionConsumerServiceURL
     }
 
     log?.debug("Found AssertionConsumerServiceURL in IdP SOAP response.")
 
-    // Make a new SOAP envelope with the following:
-    //     - (optional) A SOAP Header containing the RelayState from the first SP response
-    //     - The SOAP body of the IDP response
+    /**
+        Make a new SOAP envelope with the following:
+        - (optional) A SOAP Header containing the RelayState from the first SP response
+        - The SOAP body of the IDP response
+    */
     let spSoapDocument = AEXMLDocument()
 
     // XML namespaces are just...lovely
@@ -36,26 +39,26 @@ func buildFinalSPRequest(
         "xmlns:soap11": "http://schemas.xmlsoap.org/soap/envelope/"
     ]
     let envelope = spSoapDocument.addChild(
-        name: "S:Envelope",
+        name: "soap11:Envelope",
         attributes: spSoapAttributes
     )
 
     // Bail out if these don't match
     guard
-        idpRequestData.responseConsumerURL.URLString ==
-        assertionConsumerServiceURL.URLString
+        idpRequestData.responseConsumerURL.absoluteString ==
+        assertionConsumerServiceURL.absoluteString
     else {
         if let request = buildSoapFaultRequest(
-            idpRequestData.responseConsumerURL,
-            error: ECPError.Security.error
+            URL: idpRequestData.responseConsumerURL,
+            error: ECPError.security
         ) {
-            sendSpSoapFaultRequest(request, log: log)
+            sendSpSoapFaultRequest(request: request, log: log)
         }
-        throw ECPError.Security
+        throw ECPError.security
     }
 
     if let relay = idpRequestData.relayState {
-        let header = envelope.addChild(name: "S:Header")
+        let header = envelope.addChild(name: "soap11:Header")
         header.addChild(relay)
         log?.debug("Added RelayState to the SOAP header for the final SP request.")
     }
@@ -63,16 +66,18 @@ func buildFinalSPRequest(
     let extractedBody = body.root["soap11:Body"]
     envelope.addChild(extractedBody)
 
-    guard let bodyData = envelope.xmlString.dataUsingEncoding(NSUTF8StringEncoding) else {
-        throw ECPError.SoapGeneration
+    let soapString = spSoapDocument.root.xmlString(trimWhiteSpace: false, format: false)
+
+    guard let soapData = soapString.data(using: String.Encoding.utf8) else {
+        throw ECPError.soapGeneration
     }
 
     log?.debug("Sending this SOAP to the SP:")
-    log?.debug(envelope.xmlString)
+    log?.debug(soapString)
 
-    let spReq = NSMutableURLRequest(URL: assertionConsumerServiceURL)
-    spReq.HTTPMethod = "POST"
-    spReq.HTTPBody = bodyData
+    var spReq = URLRequest(url: assertionConsumerServiceURL)
+    spReq.httpMethod = "POST"
+    spReq.httpBody = soapData
     spReq.setValue(
         "application/vnd.paos+xml",
         forHTTPHeaderField: "Content-Type"
@@ -87,29 +92,29 @@ func sendFinalSPRequest(
     document: AEXMLDocument,
     idpRequestData: IdpRequestData,
     log: XCGLogger?
-) -> SignalProducer<String, NSError> {
-    return SignalProducer { observer, disposable in
+) -> SignalProducer<String, AnyError> {
+    return SignalProducer { observer, _ in
         do {
             let request = try buildFinalSPRequest(
-                document,
+                body: document,
                 idpRequestData: idpRequestData,
                 log: log
             )
 
             let req = Alamofire.request(request)
-            req.responseString(false).map { $0.value }.start { event in
+            req.responseString(errorOnNil: false).map { $0.value }.start { event in
                 switch event {
-                case .Next(let value):
-                    observer.sendNext(value)
+                case .value(let value):
+                    observer.send(value: value)
                     observer.sendCompleted()
-                case .Failed(let error):
-                    observer.sendFailed(error)
+                case .failed(let error):
+                    observer.send(error: error)
                 default:
                     break
                 }
             }
         } catch {
-            observer.sendFailed(error as NSError)
+            observer.send(error: AnyError(error))
         }
     }
 }

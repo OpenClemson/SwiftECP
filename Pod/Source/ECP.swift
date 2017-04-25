@@ -1,36 +1,37 @@
-import Foundation
-import Alamofire
 import AEXML
-import ReactiveCocoa
+import Result
+import Alamofire
 import XCGLogger
+import Foundation
+import ReactiveSwift
 
 struct IdpRequestData {
-    let request: NSMutableURLRequest
-    let responseConsumerURL: NSURL
+    let request: URLRequest
+    let responseConsumerURL: URL
     let relayState: AEXMLElement?
 }
 
 public func ECPLogin(
-    protectedURL: NSURL,
+    protectedURL: URL,
     username: String,
     password: String,
     logger: XCGLogger? = nil
-) -> SignalProducer<String, NSError> {
+) -> SignalProducer<String, AnyError> {
     return Alamofire.request(
-        buildInitialSPRequest(protectedURL, log: logger)
+        buildInitialSPRequest(protectedURL: protectedURL, log: logger)
     )
     .responseXML()
-    .flatMap(.Concat) {
+    .flatMap(.concat) {
         sendIdpRequest(
-            $0.value,
+            initialSpResponse: $0.value,
             username: username,
             password: password,
             log: logger
         )
     }
-    .flatMap(.Concat) {
+    .flatMap(.concat) {
         sendFinalSPRequest(
-            $0.0.value,
+            document: $0.0.value,
             idpRequestData: $0.1,
             log: logger
         )

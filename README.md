@@ -10,22 +10,24 @@ SwiftECP is a spec-conformant Shibboleth ECP client for iOS. Simply provide cred
 
 ## Usage
 
-Use the 2.0.0 beta releases if you're using Swift 2.0. For Swift 1.2, use 1.2.2.
-
 ```swift
 let username = "YOUR_USERNAME"
 let password = "YOUR_PASSWORD"
-let protectedURL = NSURL(
+let protectedURL = URL(
     string: "https://app.university.edu"
 )!
-
 let logger = XCGLogger()
-logger.setup(.Debug)
+logger.setup(level: .debug)
 
-ECPLogin(protectedURL, username: username, password: password, logger: logger).start { event in
+ECPLogin(
+    protectedURL: protectedURL,
+    username: username,
+    password: password,
+    logger: logger
+).start { event in
     switch event {
 
-    case let .Next(body):
+    case let .value(body):
         // If the request was successful, the protected resource will
         // be available in 'body'. Make sure to implement a mechanism to
         // detect authorization timeouts.
@@ -34,23 +36,23 @@ ECPLogin(protectedURL, username: username, password: password, logger: logger).s
         // The Shibboleth auth cookie is now stored in the sharedHTTPCookieStorage.
         // Attach this cookie to subsequent requests to protected resources.
         // You can access the cookie with the following code:
-        if let cookies = NSHTTPCookieStorage.sharedHTTPCookieStorage().cookies {
-            let shibCookie = cookies.filter { (cookie: NSHTTPCookie) in
-                cookie.name.rangeOfString("shibsession") != nil
-                }[0]
+        if let cookies = HTTPCookieStorage.shared.cookies {
+            let shibCookie = cookies.filter { (cookie: HTTPCookie) in
+                cookie.name.range(of: "shibsession") != nil
+            }[0]
             print(shibCookie)
         }
 
-    case let .Failed(error):
+    case let .failed(error):
         // This is an NSError containing both a user-friendly message and a
         // technical debug message. This can help diagnose problems with your
         // SP, your IdP, or even this library :)
 
         // User-friendly error message
-        print(error.localizedDescription)
+        print(error.description)
 
         // Technical/debug error message
-        print(error.localizedFailureReason)
+        print(error.error.localizedDescription)
 
     default:
         break
@@ -82,9 +84,10 @@ pod "SwiftECP"
 
 Pull requests are welcome and encouraged!
 
-## Author
+## Authors
 
-Tyler Thompson, tpthomp@clemson.edu
+- Tyler Thompson, tpthomp@clemson.edu (original author)
+- Tanner Stokes, tanners@clemson.edu (current maintainer)
 
 ## License
 

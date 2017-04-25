@@ -1,11 +1,11 @@
-import Foundation
-import Alamofire
 import AEXML
+import Alamofire
 import XCGLogger
+import Foundation
 
 // Something the spec wants but we don't need. Fire and forget.
 func sendSpSoapFaultRequest(
-    request: NSMutableURLRequest,
+    request: URLRequest,
     log: XCGLogger?
 ) {
     let request = Alamofire.request(request)
@@ -18,7 +18,7 @@ func sendSpSoapFaultRequest(
     }
 }
 
-func buildSoapFaultBody(error: NSError) -> NSData? {
+func buildSoapFaultBody(error: Error) -> Data? {
     let soapDocument = AEXMLDocument()
     let soapAttribute = [
         "xmlns:SOAP-ENV": "http://schemas.xmlsoap.org/soap/envelope/"
@@ -29,16 +29,16 @@ func buildSoapFaultBody(error: NSError) -> NSData? {
     )
     let body = envelope.addChild(name: "SOAP-ENV:Body")
     let fault = body.addChild(name: "SOAP-ENV:Fault")
-    fault.addChild(name: "faultcode", value: String(error.code))
+    fault.addChild(name: "faultcode", value: String(describing: error))
     fault.addChild(name: "faultstring", value: error.localizedDescription)
-    return soapDocument.xmlString.dataUsingEncoding(NSUTF8StringEncoding)
+    return soapDocument.xmlString(trimWhiteSpace: false, format: false).data(using: .utf8)
 }
 
-func buildSoapFaultRequest(URL: NSURL, error: NSError) -> NSMutableURLRequest? {
-    if let body = buildSoapFaultBody(error) {
-        let request = NSMutableURLRequest(URL: URL)
-        request.HTTPMethod = "POST"
-        request.HTTPBody = body
+func buildSoapFaultRequest(URL: URL, error: Error) -> URLRequest? {
+    if let body = buildSoapFaultBody(error: error) {
+        var request = URLRequest(url: URL)
+        request.httpMethod = "POST"
+        request.httpBody = body
         request.setValue(
             "application/vnd.paos+xml",
             forHTTPHeaderField: "Content-Type"

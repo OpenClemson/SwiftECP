@@ -1,13 +1,14 @@
-import Foundation
 import AEXML
+import Result
 import Alamofire
-import ReactiveCocoa
 import XCGLogger
+import Foundation
+import ReactiveSwift
 
 func basicAuthHeader(username: String, password: String) -> String? {
-    let encodedUsernameAndPassword = ("\(username):\(password)" as NSString)
-        .dataUsingEncoding(NSASCIIStringEncoding)?
-        .base64EncodedStringWithOptions([])
+    let encodedUsernameAndPassword = ("\(username):\(password)")
+        .data(using: .ascii)?
+        .base64EncodedString()
     guard encodedUsernameAndPassword != nil else {
         return nil
     }
@@ -24,11 +25,12 @@ func buildIdpRequest(
     log: XCGLogger?
 ) throws -> IdpRequestData {
     log?.debug("Initial SP SOAP response:")
-    log?.debug(body.xmlString)
+    log?.debug(body.xmlCompact)
 
     // Remove the XML signature
-    body.root["S:Body"]["samlp:AuthnRequest"]["ds:Signature"].removeFromParent()
-    log?.debug("Removed the XML signature from the SP SOAP response.")
+    // Disabled - not sure if this needs to be optional for some setups
+    //    body.root["S:Body"]["samlp:AuthnRequest"]["ds:Signature"].removeFromParent()
+    //    log?.debug("Removed the XML signature from the SP SOAP response.")
 
     // Store this so we can compare it against the AssertionConsumerServiceURL from the IdP
     let responseConsumerURLString = body.root["S:Header"]["paos:Request"]
@@ -36,9 +38,9 @@ func buildIdpRequest(
 
     guard let
         rcuString = responseConsumerURLString,
-        responseConsumerURL = NSURL(string: rcuString)
+        let responseConsumerURL = URL(string: rcuString)
     else {
-        throw ECPError.ResponseConsumerURL
+        throw ECPError.responseConsumerURL
     }
 
     log?.debug("Found the ResponseConsumerURL in the SP SOAP response.")
@@ -60,11 +62,11 @@ func buildIdpRequest(
 
     guard let
         idp = idpURLString,
-        idpURL = NSURL(string: idp),
-        idpHost = idpURL.host,
-        idpEcpURL = NSURL(string: "https://\(idpHost)/idp/profile/SAML2/SOAP/ECP")
+        let idpURL = URL(string: idp),
+        let idpHost = idpURL.host,
+        let idpEcpURL = URL(string: "https://\(idpHost)/idp/profile/SAML2/SOAP/ECP")
     else {
-        throw ECPError.IdpExtraction
+        throw ECPError.idpExtraction
     }
 
     log?.debug("Found IdP URL in the SP SOAP response.")
@@ -80,30 +82,45 @@ func buildIdpRequest(
     )
     envelope.addChild(body)
 
-    guard let soapString = envelope.xmlString.dataUsingEncoding(NSUTF8StringEncoding) else {
-        throw ECPError.SoapGeneration
+    let soapString = envelope.xmlString(trimWhiteSpace: false, format: false)
+
+    guard let soapData = soapString.data(using: String.Encoding.utf8) else {
+        throw ECPError.soapGeneration
     }
 
-    guard let authorizationHeader = basicAuthHeader(username, password: password) else {
-        throw ECPError.MissingBasicAuth
+    guard let authorizationHeader = basicAuthHeader(username: username, password: password) else {
+        throw ECPError.missingBasicAuth
     }
 
     log?.debug("Sending this SOAP to the IDP:")
-    log?.debug(envelope.xmlString)
+    log?.debug(soapString)
 
-    let idpReq = NSMutableURLRequest(URL: idpEcpURL)
-    idpReq.HTTPMethod = "POST"
-    idpReq.HTTPBody = soapString
+    var idpReq = URLRequest(url: idpEcpURL)
+    idpReq.httpMethod = "POST"
+    idpReq.httpBody = soapData
+
+//    idpReq.setValue(
+//        "application/vnd.paos+xml",
+//        forHTTPHeaderField: "Content-Type"
+//    )
+
     idpReq.setValue(
-        "application/vnd.paos+xml",
+        "text/xml; charset=\"UTF-8\"",
         forHTTPHeaderField: "Content-Type"
+    )
+
+    idpReq.setValue(
+        "identity",
+        forHTTPHeaderField: "Accept-Encoding"
     )
     idpReq.setValue(
         authorizationHeader,
         forHTTPHeaderField: "Authorization"
     )
+
     log?.debug(authorizationHeader)
     idpReq.timeoutInterval = 10
+
     log?.debug("Built first IdP request.")
 
     return IdpRequestData(
@@ -118,19 +135,21 @@ func sendIdpRequest(
     username: String,
     password: String,
     log: XCGLogger?
-) -> SignalProducer<(CheckedResponse<AEXMLDocument>, IdpRequestData), NSError> {
-    return SignalProducer { observer, disposable in
+) -> SignalProducer<(CheckedResponse<AEXMLDocument>, IdpRequestData), AnyError> {
+    return SignalProducer { observer, _ in
         do {
             let idpRequestData = try buildIdpRequest(
-                initialSpResponse,
+                body: initialSpResponse,
                 username: username,
                 password: password,
                 log: log
             )
+
             let req = Alamofire.request(idpRequestData.request)
+
             req.responseString().map { ($0, idpRequestData) }.start { event in
                 switch event {
-                case .Next(let value):
+                case let .value(value):
 
                     let stringResponse = value.0
 
@@ -138,19 +157,19 @@ func sendIdpRequest(
                         log?.debug(
                             "Received \(stringResponse.response.statusCode) response from IdP"
                         )
-                        observer.sendFailed(ECPError.IdpRequestFailed.error)
+                        observer.send(error: AnyError(ECPError.idpRequestFailed))
                         break
                     }
 
                     guard let responseData = stringResponse.value
-                        .dataUsingEncoding(NSUTF8StringEncoding)
+                        .data(using: String.Encoding.utf8)
                     else {
-                        observer.sendFailed(ECPError.XMLSerialization.error)
+                        observer.send(error: AnyError(ECPError.xmlSerialization))
                         break
                     }
 
-                    guard let responseXML = try? AEXMLDocument(xmlData: responseData) else {
-                        observer.sendFailed(ECPError.XMLSerialization.error)
+                    guard let responseXML = try? AEXMLDocument(xml: responseData) else {
+                        observer.send(error: AnyError(ECPError.xmlSerialization))
                         break
                     }
 
@@ -160,17 +179,17 @@ func sendIdpRequest(
                         value: responseXML
                     )
 
-                    observer.sendNext((xmlResponse, value.1))
+                    observer.send(value: (xmlResponse, value.1))
                     observer.sendCompleted()
 
-                case .Failed(let error):
-                    observer.sendFailed(error)
+                case .failed(let error):
+                    observer.send(error: error)
                 default:
                     break
                 }
             }
         } catch {
-            observer.sendFailed(error as NSError)
+            observer.send(error: AnyError(error))
         }
     }
 }

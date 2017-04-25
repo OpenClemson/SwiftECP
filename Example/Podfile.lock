@@ -1,46 +1,48 @@
 PODS:
-  - AEXML (2.1.0)
-  - Alamofire (3.2.1)
-  - Nimble (3.1.0)
-  - Quick (0.9.1)
-  - ReactiveCocoa (4.0.4-alpha-4):
-    - ReactiveCocoa/UI (= 4.0.4-alpha-4)
-    - Result (~> 1.0)
-  - ReactiveCocoa/Core (4.0.4-alpha-4):
-    - ReactiveCocoa/no-arc
-    - Result (~> 1.0)
-  - ReactiveCocoa/no-arc (4.0.4-alpha-4):
-    - Result (~> 1.0)
-  - ReactiveCocoa/UI (4.0.4-alpha-4):
-    - ReactiveCocoa/Core
-    - Result (~> 1.0)
-  - Result (1.0.2)
-  - SwiftECP (3.0.0):
-    - AEXML (~> 2.0)
-    - Alamofire (~> 3.2.1)
-    - ReactiveCocoa (= 4.0.4-alpha-4)
-    - XCGLogger (~> 3.0)
-  - XCGLogger (3.2)
+  - AEXML (4.2.0)
+  - Alamofire (4.4.0)
+  - Nimble (5.1.1)
+  - Quick (1.1.0)
+  - ReactiveSwift (1.1.1):
+    - Result (~> 3.2)
+  - Result (3.2.1)
+  - SwiftECP (4.0.0):
+    - AEXML (~> 4.0)
+    - Alamofire (~> 4.0)
+    - ReactiveSwift (~> 1.0)
+    - XCGLogger (~> 4.0)
+  - XCGLogger (4.0.0):
+    - XCGLogger/Core (= 4.0.0)
+  - XCGLogger/Core (4.0.0)
 
 DEPENDENCIES:
-  - Nimble (= 3.1.0)
-  - Quick (~> 0.9.1)
+  - AEXML (from `https://github.com/OpenClemson/AEXML`, branch `parse_tail`)
+  - Nimble (~> 5.0)
+  - Quick (~> 1.0)
   - SwiftECP (from `../`)
 
 EXTERNAL SOURCES:
+  AEXML:
+    :branch: parse_tail
+    :git: https://github.com/OpenClemson/AEXML
   SwiftECP:
     :path: "../"
 
+CHECKOUT OPTIONS:
+  AEXML:
+    :commit: a04dbcd4c393410abce1115c11bdf2980b20bcc9
+    :git: https://github.com/OpenClemson/AEXML
+
 SPEC CHECKSUMS:
-  AEXML: 0e2f657fdc67e17905682a06d55583a863d80803
-  Alamofire: f11d8624a05f5d39e0c99309b3e600a3ba64298a
-  Nimble: 79d40f4d69d47314229bbabacaa02b8838c779b9
-  Quick: a5221fc21788b6aeda934805e68b061839bc3165
-  ReactiveCocoa: e459ea92099447802df20c4735e31e8139b06094
-  Result: dd3dd71af3fa2e262f1a999e14fba2c25ec14f16
-  SwiftECP: 208d5bccad02df094804b151109828a74039b293
-  XCGLogger: da1f341f4bb8979db6e1df64232f04d9698402d4
+  AEXML: deea5b5469a2f485f3c7a5d461a6ce0091d98161
+  Alamofire: dc44b1600b800eb63da6a19039a0083d62a6a62d
+  Nimble: 415e3aa3267e7bc2c96b05fa814ddea7bb686a29
+  Quick: dafc587e21eed9f4cab3249b9f9015b0b7a7f71d
+  ReactiveSwift: 2489549e3231a6ff68ec99f3d320bb264f10ba0a
+  Result: 2453a22e5c5b11c0c3a478736e82cd02f763b781
+  SwiftECP: 3f3afd5a55d1c62107f259f44efa5f1ef85aff7f
+  XCGLogger: 38063ea89b4c8b23232d18efd2e12eb0005f3ea4
 
-PODFILE CHECKSUM: f650f0573d240c666d7f3d2833d6ec42eaec449d
+PODFILE CHECKSUM: e81825f3f3be3208d5f7d5e46f33eb286877f564
 
-COCOAPODS: 1.0.0.beta.6
+COCOAPODS: 1.2.1
