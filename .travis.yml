@@ -4,8 +4,6 @@ podfile: Example/Podfile
 before_install:
   - brew update
   - brew install swiftlint
-  - gem uninstall cocoapods
-  - gem install cocoapods --pre
   - pod setup
   - pod install --project-directory=Example
 install:
