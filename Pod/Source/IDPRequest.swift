@@ -99,11 +99,6 @@ func buildIdpRequest(
     idpReq.httpMethod = "POST"
     idpReq.httpBody = soapData
 
-//    idpReq.setValue(
-//        "application/vnd.paos+xml",
-//        forHTTPHeaderField: "Content-Type"
-//    )
-
     idpReq.setValue(
         "text/xml; charset=\"UTF-8\"",
         forHTTPHeaderField: "Content-Type"
