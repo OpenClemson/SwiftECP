@@ -60,6 +60,12 @@ ECPLogin(
 }
 ```
 
+## Requirements
+
+- iOS 9.0+
+- Xcode 8.1+
+- Swift 3.0+
+
 ## Test
 
 To run the example project, clone the repo, and run `pod install` from the Example directory first.
