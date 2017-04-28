@@ -7,7 +7,8 @@ Pod::Spec.new do |s|
                        DESC
   s.homepage         = "https://github.com/OpenClemson/SwiftECP"
   s.license          = 'Apache 2.0'
-  s.author           = { "Tyler Thompson" => "tpthomp@clemson.edu" }
+  s.author           = { "Tyler Thompson" => "tpthomp@clemson.edu",
+                         "Tanner Stokes" => "tanners@clemson.edu" }
   s.source           = { :git => "https://github.com/OpenClemson/SwiftECP.git", :tag => s.version.to_s }
 
   s.platform     = :ios, '9.0'
