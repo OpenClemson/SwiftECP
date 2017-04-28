@@ -1,85 +1,94 @@
-import Foundation
 import AEXML
+import Result
 import Alamofire
-import ReactiveCocoa
+import Foundation
+import ReactiveSwift
 
 public struct CheckedResponse<T> {
-    let request: NSURLRequest
-    let response: NSHTTPURLResponse
+    let request: URLRequest
+    let response: HTTPURLResponse
     let value: T
 }
 
-extension Alamofire.Request {
-    public static func XMLResponseSerializer() -> ResponseSerializer<AEXMLDocument, NSError> {
-        return ResponseSerializer { _, resp, data, error in
-            guard error == nil else { return .Failure(error!) }
+extension DataRequest {
+    public static func xmlResponseSerializer() -> DataResponseSerializer<AEXMLDocument> {
+        return DataResponseSerializer { _, resp, data, error in
+            guard error == nil else { return .failure(AlamofireRACError.network(error: error!)) }
 
-            guard let validData = data where validData.length > 0 else {
-                let failureReason = "Could not serialize data. Input data was nil or zero length."
-                let error = Error.errorWithCode(
-                    .DataSerializationFailed, failureReason: failureReason
-                )
-                return .Failure(error)
+            let result = Request.serializeResponseData(response: resp, data: data, error: nil)
+
+            guard case let .success(validData) = result else {
+                return .failure(AlamofireRACError.xmlSerialization)
             }
 
             do {
-                let document = try AEXMLDocument(xmlData: validData)
-                return .Success(document)
+                let document = try AEXMLDocument(xml: validData)
+                return .success(document)
             } catch {
-                return .Failure(error as NSError)
+                return .failure(AlamofireRACError.xmlSerialization)
             }
         }
     }
 
-    public static func emptyAllowedStringResponseSerializer()
-        -> ResponseSerializer<String, NSError> {
-        return ResponseSerializer { _, resp, data, error in
-            guard error == nil else { return .Failure(error!) }
+    public static func emptyAllowedStringResponseSerializer() -> DataResponseSerializer<String> {
+        return DataResponseSerializer { _, resp, data, error in
+            guard error == nil else { return .failure(AlamofireRACError.network(error: error!)) }
 
-            guard let
-                validData = data,
-                string = String(data: validData, encoding: NSUTF8StringEncoding)
-            else {
-                return .Success("")
+            let result = Request.serializeResponseData(response: resp, data: data, error: nil)
+
+            guard case let .success(validData) = result else {
+                return .failure(result.error!)
             }
 
-            return .Success(string)
+            guard let string = String(data: validData, encoding: String.Encoding.utf8) else {
+                return .success("")
+            }
+
+            return .success(string)
         }
     }
 
-    public func responseXML(completionHandler: Response<AEXMLDocument, NSError> -> Void) -> Self {
+    @discardableResult
+    public func responseXML(
+        queue: DispatchQueue? = nil,
+        completionHandler: @escaping (DataResponse<AEXMLDocument>) -> Void)
+        -> Self {
         return response(
-            responseSerializer: Request.XMLResponseSerializer(),
+            queue: queue,
+            responseSerializer: DataRequest.xmlResponseSerializer(),
             completionHandler: completionHandler
         )
     }
 
+    @discardableResult
     public func responseStringEmptyAllowed(
-        completionHandler: Response<String, NSError> -> Void
-    ) -> Self {
+        queue: DispatchQueue? = nil,
+        completionHandler: @escaping (DataResponse<String>) -> Void
+        ) -> Self {
         return response(
-            responseSerializer: Request.emptyAllowedStringResponseSerializer(),
+            queue: queue,
+            responseSerializer: DataRequest.emptyAllowedStringResponseSerializer(),
             completionHandler: completionHandler
         )
     }
 
-    public func responseXML() -> SignalProducer<CheckedResponse<AEXMLDocument>, NSError> {
-        return SignalProducer { observer, disposable in
+    public func responseXML() -> SignalProducer<CheckedResponse<AEXMLDocument>, AnyError> {
+        return SignalProducer { observer, _ in
             self.responseXML { response in
                 if let error = response.result.error {
-                    return observer.sendFailed(error)
+                    return observer.send(error: AnyError(error))
                 }
 
                 guard let document = response.result.value else {
-                    return observer.sendFailed(AlamofireRACError.XMLSerialization as NSError)
+                    return observer.send(error: AnyError(AlamofireRACError.xmlSerialization))
                 }
 
-                guard let request = response.request, response = response.response else {
-                    return observer.sendFailed(AlamofireRACError.IncompleteResponse as NSError)
+                guard let request = response.request, let response = response.response else {
+                    return observer.send(error: AnyError(AlamofireRACError.incompleteResponse))
                 }
 
-                observer.sendNext(
-                    CheckedResponse<AEXMLDocument>(
+                observer.send(
+                    value: CheckedResponse<AEXMLDocument>(
                         request: request, response: response, value: document
                     )
                 )
@@ -90,23 +99,23 @@ extension Alamofire.Request {
 
     public func responseString(
         errorOnNil: Bool = true
-    ) -> SignalProducer<CheckedResponse<String>, NSError> {
-        return SignalProducer { observer, disposable in
+        ) -> SignalProducer<CheckedResponse<String>, AnyError> {
+        return SignalProducer { observer, _ in
             self.responseStringEmptyAllowed { response in
                 if let error = response.result.error {
-                    return observer.sendFailed(error)
+                    return observer.send(error: AnyError(error))
                 }
 
                 if errorOnNil && response.result.value?.characters.count == 0 {
-                    return observer.sendFailed(AlamofireRACError.IncompleteResponse as NSError)
+                    return observer.send(error: AnyError(AlamofireRACError.incompleteResponse))
                 }
 
-                guard let req = response.request, resp = response.response else {
-                    return observer.sendFailed(AlamofireRACError.IncompleteResponse as NSError)
+                guard let req = response.request, let resp = response.response else {
+                    return observer.send(error: AnyError(AlamofireRACError.incompleteResponse))
                 }
 
-                observer.sendNext(
-                    CheckedResponse<String>(
+                observer.send(
+                    value: CheckedResponse<String>(
                         request: req, response: resp, value: response.result.value ?? ""
                     )
                 )
@@ -116,7 +125,19 @@ extension Alamofire.Request {
     }
 }
 
-enum AlamofireRACError: ErrorType {
-    case XMLSerialization
-    case IncompleteResponse
+enum AlamofireRACError: Error {
+    case network(error: Error)
+    case xmlSerialization
+    case incompleteResponse
+
+    var description: String {
+        switch self {
+        case .network(let error):
+            return "There was a network issue: \(error)."
+        case .xmlSerialization:
+            return "Could not serialize XML."
+        case .incompleteResponse:
+            return "Incomplete response."
+        }
+    }
 }

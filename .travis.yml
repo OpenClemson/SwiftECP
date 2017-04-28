@@ -1,19 +1,22 @@
 language: objective-c
-osx_image: xcode7.2
+osx_image: xcode8.3
 podfile: Example/Podfile
 before_install:
-  - brew update
-  - brew install swiftlint
-  - gem uninstall cocoapods
-  - gem install cocoapods --pre
-  - pod setup
-  - pod install --project-directory=Example
+- brew update
+- brew install swiftlint
+- pod setup
+- pod install --project-directory=Example
 install:
-  - gem install xcpretty --no-rdoc --no-ri --no-document --quiet
+- gem install xcpretty --no-rdoc --no-ri --no-document --quiet
 script:
-  - swiftlint
-  - set -o pipefail && xcodebuild test -workspace Example/SwiftECP.xcworkspace -scheme SwiftECP-Example -destination 'platform=iOS Simulator,name=iPhone 6,OS=latest' -enableCodeCoverage YES ONLY_ACTIVE_ARCH=NO GCC_INSTRUMENT_PROGRAM_FLOW_ARCS=YES GCC_GENERATE_TEST_COVERAGE_FILES=YES |
-    xcpretty -c
-  - pod lib lint --quick --allow-warnings
+- swiftlint
+- set -o pipefail && xcodebuild test -workspace Example/SwiftECP.xcworkspace -scheme
+  SwiftECP-Example -destination 'platform=iOS Simulator,name=iPhone 6,OS=latest' -enableCodeCoverage
+  YES ONLY_ACTIVE_ARCH=NO GCC_INSTRUMENT_PROGRAM_FLOW_ARCS=YES GCC_GENERATE_TEST_COVERAGE_FILES=YES
+  | xcpretty -c
+- pod lib lint --quick --allow-warnings
 after_success:
-  - bash <(curl -s https://codecov.io/bash)
+- bash <(curl -s https://codecov.io/bash)
+notifications:
+  slack:
+    secure: RDiBsxUN9N4Y6rXGgenAAnu0DMebRQzlJ37M7LTBa4o3SpPzLnUhNTBMK4TR3FD4dmbpNZkMqMrGc/3U2f04Dr7K8FR1Lac1IgFAC6GpU9h3jn8HMoRcroGB8msjPuF3tw4afywX79fd5y3ri6GmVlYa830ikZi7vDUlAuLRPWGRPVc0mmIOqUtYV6P8HlhUnoU5Y1tChtZqyJEzpR9anDR8bVCPYEfKS01SYjQqyi+PPYSNWrfWnRCMS97R3ys9QB6xiURtEDmzVjfPLCm3Gyh5KCW3qO+8CnVxy3TzTONY5gIcpds7Klq5EHkZnCN/nia6mYfC16Mfzx6KghISzWeCjVOPpMd+HkpPmkNER71A2Aj2WqB9HrWrUADtz1ExfMZKES+ytogV4qKBoV3zC+2D1cjGX6+4myYRrbhDdEEaf9Z83A1AAF6hELdnYAev0fZNm8y4TmYvQUER5I7boAWZ2gqzq4chESU9C/jQlsN2EROIhNlCFoV7s9VvwqE27yZC1PZoPSi0+tD6nb1iXrq9szidU56lmFde19p6SLzJuOcY9FDb748mrQHGuOSH7bmUHvgkz0ZOgSK5shhGq2c8w4n3CI16Ias8v7WX2lqgic6lzG5eQPeXbXmKHGmKLTeVc5kacbZ2qiLpc5g7dxpsKej28fOhuG1KzHdfclU=

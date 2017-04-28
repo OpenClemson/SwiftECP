@@ -1,57 +1,57 @@
 import Foundation
 
-public enum ECPError: ErrorType {
-    case Extraction
-    case EmptyBody
-    case SoapGeneration
-    case IdpExtraction
-    case RelayState
-    case ResponseConsumerURL
-    case AssertionConsumerServiceURL
-    case Security
-    case MissingBasicAuth
-    case WTF
-    case IdpRequestFailed
-    case XMLSerialization
+public enum ECPError: Error {
+    case extraction
+    case emptyBody
+    case soapGeneration
+    case idpExtraction
+    case relayState
+    case responseConsumerURL
+    case assertionConsumerServiceURL
+    case security
+    case missingBasicAuth
+    case wtf
+    case idpRequestFailed
+    case xmlSerialization
 
     private var domain: String {
         return "edu.clemson.swiftecp"
     }
 
-    private var errorCode: Int {
+    var errorCode: Int {
         switch self {
-        case .Extraction:
+        case .extraction:
             return 200
-        case .EmptyBody:
+        case .emptyBody:
             return 201
-        case .SoapGeneration:
+        case .soapGeneration:
             return 202
-        case .IdpExtraction:
+        case .idpExtraction:
             return 203
-        case .RelayState:
+        case .relayState:
             return 204
-        case .ResponseConsumerURL:
+        case .responseConsumerURL:
             return 205
-        case .AssertionConsumerServiceURL:
+        case .assertionConsumerServiceURL:
             return 206
-        case .Security:
+        case .security:
             return 207
-        case .MissingBasicAuth:
+        case .missingBasicAuth:
             return 208
-        case .WTF:
+        case .wtf:
             return 209
-        case .IdpRequestFailed:
+        case .idpRequestFailed:
             return 210
-        case .XMLSerialization:
+        case .xmlSerialization:
             return 211
         }
     }
 
     var userMessage: String {
         switch self {
-        case .EmptyBody:
+        case .emptyBody:
             return "The password you entered is incorrect. Please try again."
-        case .IdpRequestFailed:
+        case .idpRequestFailed:
             return "The password you entered is incorrect. Please try again."
         default:
             // swiftlint:disable:next line_length
@@ -61,37 +61,30 @@ public enum ECPError: ErrorType {
 
     var description: String {
         switch self {
-        case .Extraction:
+        case .extraction:
             return "Could not extract the necessary info from the XML response."
-        case .EmptyBody:
+        case .emptyBody:
             return "Empty body. The given password is likely incorrect."
-        case .SoapGeneration:
+        case .soapGeneration:
             return "Could not generate a valid SOAP request body from the response's SOAP body."
-        case .IdpExtraction:
+        case .idpExtraction:
             return "Could not extract the IDP endpoint from the SOAP body."
-        case .RelayState:
+        case .relayState:
             return "Could not extract the RelayState from the SOAP body."
-        case .ResponseConsumerURL:
+        case .responseConsumerURL:
             return "Could not extract the ResponseConsumerURL from the SOAP body."
-        case .AssertionConsumerServiceURL:
+        case .assertionConsumerServiceURL:
             return "Could not extract the AssertionConsumerServiceURL from the SOAP body."
-        case .Security:
+        case .security:
             return "ResponseConsumerURL did not match AssertionConsumerServiceURL."
-        case .MissingBasicAuth:
+        case .missingBasicAuth:
             return "Could not generate basic auth from the given username and password."
-        case .WTF:
+        case .wtf:
             return "Unknown error. Please contact the library developer."
-        case .IdpRequestFailed:
+        case .idpRequestFailed:
             return "IdP request failed. The given password is likely incorrect."
-        case .XMLSerialization:
+        case .xmlSerialization:
             return "Unable to serialize response to XML."
         }
-    }
-
-    var error: NSError {
-        return NSError(domain: domain, code: errorCode, userInfo: [
-            NSLocalizedDescriptionKey: userMessage,
-            NSLocalizedFailureReasonErrorKey: description
-        ])
     }
 }

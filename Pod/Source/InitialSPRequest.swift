@@ -1,12 +1,12 @@
-import Foundation
 import XCGLogger
+import Foundation
 
 func buildInitialSPRequest(
-    protectedURL: NSURL,
+    protectedURL: URL,
     log: XCGLogger?
-) -> NSMutableURLRequest {
+) -> URLRequest {
     // Create a request with the appropriate headers to trigger ECP on the SP.
-    let request = NSMutableURLRequest(URL: protectedURL)
+    var request = URLRequest(url: protectedURL)
     request.setValue(
         "text/html; application/vnd.paos+xml",
         forHTTPHeaderField: "Accept"
@@ -15,6 +15,9 @@ func buildInitialSPRequest(
         "ver=\"urn:liberty:paos:2003-08\";\"urn:oasis:names:tc:SAML:2.0:profiles:SSO:ecp\"",
         forHTTPHeaderField: "PAOS"
     )
+    request.setValue(
+        "identity",
+        forHTTPHeaderField: "Accept-Encoding")
     request.timeoutInterval = 10
     log?.debug("Built initial SP request.")
     return request
