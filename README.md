@@ -4,7 +4,7 @@
 [![License](https://img.shields.io/cocoapods/l/SwiftECP.svg?style=flat)](http://cocoapods.org/pods/SwiftECP)
 [![Platform](https://img.shields.io/cocoapods/p/SwiftECP.svg?style=flat)](http://cocoapods.org/pods/SwiftECP)
 
-Need Shibboleth login on your iOS app but don't want to use a webview? Don't want to deal with XML or read a spec? Use SwiftECP to do the work for you!
+Need Shibboleth login on your iOS / macOS app but don't want to use a webview? Don't want to deal with XML or read a spec? Use SwiftECP to do the work for you!
 
 SwiftECP is a spec-conformant Shibboleth ECP client for iOS. Simply provide credentials and a Shibboleth-protected resource URL and SwiftECP will hand you a Shibboleth cookie to attach to further requests or inject into a webview.
 
@@ -62,7 +62,7 @@ ECPLogin(
 
 ## Requirements
 
-- iOS 9.0+
+- iOS 9.0+ / macOS 10.11+
 - Xcode 8.1+
 - Swift 3.0+
 
