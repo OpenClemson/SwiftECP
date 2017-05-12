@@ -13,12 +13,12 @@ public struct CheckedResponse<T> {
 extension DataRequest {
     public static func xmlResponseSerializer() -> DataResponseSerializer<AEXMLDocument> {
         return DataResponseSerializer { _, resp, data, error in
-            guard error == nil else { return .failure(AlamofireRACError.network(error: error!)) }
+            guard error == nil else { return .failure(AlamofireRACError.network(error: error)) }
 
             let result = Request.serializeResponseData(response: resp, data: data, error: nil)
 
             guard case let .success(validData) = result else {
-                return .failure(AlamofireRACError.xmlSerialization)
+                return .failure(AlamofireRACError.dataSerialization)
             }
 
             do {
@@ -32,12 +32,12 @@ extension DataRequest {
 
     public static func emptyAllowedStringResponseSerializer() -> DataResponseSerializer<String> {
         return DataResponseSerializer { _, resp, data, error in
-            guard error == nil else { return .failure(AlamofireRACError.network(error: error!)) }
+            guard error == nil else { return .failure(AlamofireRACError.network(error: error)) }
 
             let result = Request.serializeResponseData(response: resp, data: data, error: nil)
 
             guard case let .success(validData) = result else {
-                return .failure(result.error!)
+                return .failure(AlamofireRACError.dataSerialization)
             }
 
             guard let string = String(data: validData, encoding: String.Encoding.utf8) else {
@@ -126,7 +126,8 @@ extension DataRequest {
 }
 
 enum AlamofireRACError: Error {
-    case network(error: Error)
+    case network(error: Error?)
+    case dataSerialization
     case xmlSerialization
     case incompleteResponse
 
@@ -134,6 +135,8 @@ enum AlamofireRACError: Error {
         switch self {
         case .network(let error):
             return "There was a network issue: \(error)."
+        case .dataSerialization:
+            return "Could not serialize data."
         case .xmlSerialization:
             return "Could not serialize XML."
         case .incompleteResponse:
