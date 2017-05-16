@@ -87,4 +87,11 @@ public enum ECPError: Error {
             return "Unable to serialize response to XML."
         }
     }
+
+    var error: NSError {
+        return NSError(domain: domain, code: errorCode, userInfo: [
+            NSLocalizedDescriptionKey: userMessage,
+            NSLocalizedFailureReasonErrorKey: description
+            ])
+    }
 }

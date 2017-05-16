@@ -1,5 +1,4 @@
 import AEXML_CU
-import Result
 import Alamofire
 import XCGLogger
 import Foundation
@@ -130,7 +129,7 @@ func sendIdpRequest(
     username: String,
     password: String,
     log: XCGLogger?
-) -> SignalProducer<(CheckedResponse<AEXMLDocument>, IdpRequestData), AnyError> {
+) -> SignalProducer<(CheckedResponse<AEXMLDocument>, IdpRequestData), NSError> {
     return SignalProducer { observer, _ in
         do {
             let idpRequestData = try buildIdpRequest(
@@ -145,26 +144,25 @@ func sendIdpRequest(
             req.responseString().map { ($0, idpRequestData) }.start { event in
                 switch event {
                 case let .value(value):
-
                     let stringResponse = value.0
 
                     guard case 200 ... 299 = stringResponse.response.statusCode else {
                         log?.debug(
                             "Received \(stringResponse.response.statusCode) response from IdP"
                         )
-                        observer.send(error: AnyError(ECPError.idpRequestFailed))
+                        observer.send(error: ECPError.idpRequestFailed.error)
                         break
                     }
 
                     guard let responseData = stringResponse.value
                         .data(using: String.Encoding.utf8)
                     else {
-                        observer.send(error: AnyError(ECPError.xmlSerialization))
+                        observer.send(error: ECPError.xmlSerialization.error)
                         break
                     }
 
                     guard let responseXML = try? AEXMLDocument(xml: responseData) else {
-                        observer.send(error: AnyError(ECPError.xmlSerialization))
+                        observer.send(error: ECPError.xmlSerialization.error)
                         break
                     }
 
@@ -176,7 +174,6 @@ func sendIdpRequest(
 
                     observer.send(value: (xmlResponse, value.1))
                     observer.sendCompleted()
-
                 case .failed(let error):
                     observer.send(error: error)
                 default:
@@ -184,7 +181,7 @@ func sendIdpRequest(
                 }
             }
         } catch {
-            observer.send(error: AnyError(error))
+            observer.send(error: error as NSError)
         }
     }
 }

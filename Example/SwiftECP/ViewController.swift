@@ -1,7 +1,6 @@
 import UIKit
 import SwiftECP
 import XCGLogger
-import Result
 
 class ViewController: UIViewController {
     override func viewDidLoad() {
@@ -48,7 +47,7 @@ class ViewController: UIViewController {
                 print(error.description)
 
                 // Technical/debug error message
-                print(error.error.localizedDescription)
+                print(error.localizedDescription)
 
             default:
                 break

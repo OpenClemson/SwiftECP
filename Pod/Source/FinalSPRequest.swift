@@ -1,4 +1,3 @@
-import Result
 import AEXML_CU
 import Alamofire
 import XCGLogger
@@ -92,7 +91,7 @@ func sendFinalSPRequest(
     document: AEXMLDocument,
     idpRequestData: IdpRequestData,
     log: XCGLogger?
-) -> SignalProducer<String, AnyError> {
+) -> SignalProducer<String, NSError> {
     return SignalProducer { observer, _ in
         do {
             let request = try buildFinalSPRequest(
@@ -108,13 +107,13 @@ func sendFinalSPRequest(
                     observer.send(value: value)
                     observer.sendCompleted()
                 case .failed(let error):
-                    observer.send(error: error)
+                    observer.send(error: error as NSError)
                 default:
                     break
                 }
             }
         } catch {
-            observer.send(error: AnyError(error))
+            observer.send(error: error as NSError)
         }
     }
 }
