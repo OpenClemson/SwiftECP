@@ -3,7 +3,6 @@ osx_image: xcode8.3
 podfile: Example/Podfile
 before_install:
 - brew update
-- brew install swiftlint
 - pod setup
 - pod install --project-directory=Example
 install:
