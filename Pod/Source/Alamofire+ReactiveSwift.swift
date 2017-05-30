@@ -1,5 +1,6 @@
 import AEXML_CU
 import Alamofire
+import AnyError
 import Foundation
 import ReactiveSwift
 
@@ -17,7 +18,7 @@ extension DataRequest {
             let result = Request.serializeResponseData(response: resp, data: data, error: nil)
 
             guard case let .success(validData) = result else {
-                return .failure(AlamofireRACError.dataSerialization)
+                return .failure(AlamofireRACError.dataSerialization(error: error))
             }
 
             do {
@@ -36,7 +37,7 @@ extension DataRequest {
             let result = Request.serializeResponseData(response: resp, data: data, error: nil)
 
             guard case let .success(validData) = result else {
-                return .failure(AlamofireRACError.dataSerialization)
+                return .failure(AlamofireRACError.dataSerialization(error: error))
             }
 
             guard let string = String(data: validData, encoding: String.Encoding.utf8) else {
@@ -71,19 +72,19 @@ extension DataRequest {
         )
     }
 
-    public func responseXML() -> SignalProducer<CheckedResponse<AEXMLDocument>, NSError> {
+    public func responseXML() -> SignalProducer<CheckedResponse<AEXMLDocument>, AnyError> {
         return SignalProducer { observer, _ in
             self.responseXML { response in
                 if let error = response.result.error {
-                    return observer.send(error: error as NSError)
+                    return observer.send(error: AnyError(cause: error))
                 }
 
                 guard let document = response.result.value else {
-                    return observer.send(error: AlamofireRACError.xmlSerialization as NSError)
+                    return observer.send(error: AlamofireRACError.xmlSerialization.asAnyError())
                 }
 
                 guard let request = response.request, let response = response.response else {
-                    return observer.send(error: AlamofireRACError.incompleteResponse as NSError)
+                    return observer.send(error: AlamofireRACError.incompleteResponse.asAnyError())
                 }
 
                 observer.send(
@@ -98,19 +99,19 @@ extension DataRequest {
 
     public func responseString(
         errorOnNil: Bool = true
-        ) -> SignalProducer<CheckedResponse<String>, NSError> {
+        ) -> SignalProducer<CheckedResponse<String>, AnyError> {
         return SignalProducer { observer, _ in
             self.responseStringEmptyAllowed { response in
                 if let error = response.result.error {
-                    return observer.send(error: error as NSError)
+                    return observer.send(error: AnyError(cause: error))
                 }
 
                 if errorOnNil && response.result.value?.characters.count == 0 {
-                    return observer.send(error: AlamofireRACError.incompleteResponse as NSError)
+                    return observer.send(error: AlamofireRACError.incompleteResponse.asAnyError())
                 }
 
                 guard let req = response.request, let resp = response.response else {
-                    return observer.send(error: AlamofireRACError.incompleteResponse as NSError)
+                    return observer.send(error: AlamofireRACError.incompleteResponse.asAnyError())
                 }
 
                 observer.send(
@@ -124,22 +125,25 @@ extension DataRequest {
     }
 }
 
-enum AlamofireRACError: Error {
+public enum AlamofireRACError: Error, AnyErrorConverter {
     case network(error: Error?)
-    case dataSerialization
+    case dataSerialization(error: Error?)
     case xmlSerialization
     case incompleteResponse
+    case unknownError
 
-    var description: String {
+    public var description: String {
         switch self {
         case .network(let error):
             return "There was a network issue: \(error)."
-        case .dataSerialization:
-            return "Could not serialize data."
+        case .dataSerialization(let error):
+            return "Could not serialize data: \(error)."
         case .xmlSerialization:
             return "Could not serialize XML."
         case .incompleteResponse:
             return "Incomplete response."
+        default:
+            return "There was an unknown error."
         }
     }
 }

@@ -1,6 +1,7 @@
 import Foundation
+import AnyError
 
-public enum ECPError: Error {
+public enum ECPError: Error, AnyErrorConverter {
     case extraction
     case emptyBody
     case soapGeneration
@@ -14,11 +15,7 @@ public enum ECPError: Error {
     case idpRequestFailed
     case xmlSerialization
 
-    private var domain: String {
-        return "edu.clemson.swiftecp"
-    }
-
-    var errorCode: Int {
+    public var errorCode: Int {
         switch self {
         case .extraction:
             return 200
@@ -47,7 +44,7 @@ public enum ECPError: Error {
         }
     }
 
-    var userMessage: String {
+    public var userMessage: String {
         switch self {
         case .emptyBody:
             return "The password you entered is incorrect. Please try again."
@@ -59,7 +56,7 @@ public enum ECPError: Error {
         }
     }
 
-    var description: String {
+    public var description: String {
         switch self {
         case .extraction:
             return "Could not extract the necessary info from the XML response."
@@ -86,12 +83,5 @@ public enum ECPError: Error {
         case .xmlSerialization:
             return "Unable to serialize response to XML."
         }
-    }
-
-    var error: NSError {
-        return NSError(domain: domain, code: errorCode, userInfo: [
-            NSLocalizedDescriptionKey: userMessage,
-            NSLocalizedFailureReasonErrorKey: description
-            ])
     }
 }

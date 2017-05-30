@@ -1,5 +1,6 @@
 import AEXML_CU
 import Alamofire
+import AnyError
 import XCGLogger
 import Foundation
 import ReactiveSwift
@@ -15,7 +16,7 @@ public func ECPLogin(
     username: String,
     password: String,
     logger: XCGLogger? = nil
-    ) -> SignalProducer<String, NSError> {
+    ) -> SignalProducer<String, AnyError> {
     return Alamofire.request(
         buildInitialSPRequest(protectedURL: protectedURL, log: logger)
     )

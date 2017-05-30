@@ -39,15 +39,24 @@ class ViewController: UIViewController {
                 }
 
             case let .failed(error):
-                // This is an NSError containing both a user-friendly message and a
-                // technical debug message. This can help diagnose problems with your
-                // SP, your IdP, or even this library :)
+                // This is an AnyError that wraps the error thrown.
+                // This can help diagnose problems with your SP, your IdP, or even this library :)
 
-                // User-friendly error message
-                print(error.description)
+                switch error.cause {
+                case let ecpError as ECPError:
+                    print("We got an ECP Error!")
+                    // User-friendly error message
+                    print(ecpError.userMessage)
 
-                // Technical/debug error message
-                print(error.localizedDescription)
+                    // Technical/debug error message
+                    print(ecpError.description)
+                case let alamofireRACError as AlamofireRACError:
+                    print("We got a networking error!")
+                    print(alamofireRACError.description)
+                default:
+                    print("Unknown error!")
+                    print(error)
+                }
 
             default:
                 break

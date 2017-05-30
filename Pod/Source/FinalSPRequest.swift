@@ -1,5 +1,6 @@
 import AEXML_CU
 import Alamofire
+import AnyError
 import XCGLogger
 import Foundation
 import ReactiveSwift
@@ -91,7 +92,7 @@ func sendFinalSPRequest(
     document: AEXMLDocument,
     idpRequestData: IdpRequestData,
     log: XCGLogger?
-) -> SignalProducer<String, NSError> {
+) -> SignalProducer<String, AnyError> {
     return SignalProducer { observer, _ in
         do {
             let request = try buildFinalSPRequest(
@@ -107,13 +108,13 @@ func sendFinalSPRequest(
                     observer.send(value: value)
                     observer.sendCompleted()
                 case .failed(let error):
-                    observer.send(error: error as NSError)
+                    observer.send(error: AnyError(cause: error))
                 default:
                     break
                 }
             }
         } catch {
-            observer.send(error: error as NSError)
+            observer.send(error: AnyError(cause: error))
         }
     }
 }

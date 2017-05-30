@@ -1,5 +1,6 @@
 import AEXML_CU
 import Alamofire
+import AnyError
 import XCGLogger
 import Foundation
 import ReactiveSwift
@@ -129,7 +130,7 @@ func sendIdpRequest(
     username: String,
     password: String,
     log: XCGLogger?
-) -> SignalProducer<(CheckedResponse<AEXMLDocument>, IdpRequestData), NSError> {
+) -> SignalProducer<(CheckedResponse<AEXMLDocument>, IdpRequestData), AnyError> {
     return SignalProducer { observer, _ in
         do {
             let idpRequestData = try buildIdpRequest(
@@ -150,19 +151,19 @@ func sendIdpRequest(
                         log?.debug(
                             "Received \(stringResponse.response.statusCode) response from IdP"
                         )
-                        observer.send(error: ECPError.idpRequestFailed.error)
+                        observer.send(error: ECPError.idpRequestFailed.asAnyError())
                         break
                     }
 
                     guard let responseData = stringResponse.value
                         .data(using: String.Encoding.utf8)
                     else {
-                        observer.send(error: ECPError.xmlSerialization.error)
+                        observer.send(error: ECPError.xmlSerialization.asAnyError())
                         break
                     }
 
                     guard let responseXML = try? AEXMLDocument(xml: responseData) else {
-                        observer.send(error: ECPError.xmlSerialization.error)
+                        observer.send(error: ECPError.xmlSerialization.asAnyError())
                         break
                     }
 
@@ -181,7 +182,7 @@ func sendIdpRequest(
                 }
             }
         } catch {
-            observer.send(error: error as NSError)
+            observer.send(error: AnyError(cause: error))
         }
     }
 }
