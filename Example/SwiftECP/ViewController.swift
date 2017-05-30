@@ -44,14 +44,14 @@ class ViewController: UIViewController {
 
                 switch error.cause {
                 case let ecpError as ECPError:
-                    print("We got an ECP Error!")
+                    // Error with ECP
                     // User-friendly error message
                     print(ecpError.userMessage)
 
                     // Technical/debug error message
                     print(ecpError.description)
                 case let alamofireRACError as AlamofireRACError:
-                    print("We got a networking error!")
+                    // Error with the networking layer
                     print(alamofireRACError.description)
                 default:
                     print("Unknown error!")

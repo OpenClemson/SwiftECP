@@ -44,15 +44,24 @@ ECPLogin(
         }
 
     case let .failed(error):
-        // This is an NSError containing both a user-friendly message and a
-        // technical debug message. This can help diagnose problems with your
-        // SP, your IdP, or even this library :)
+        // This is an AnyError that wraps the error thrown.
+        // This can help diagnose problems with your SP, your IdP, or even this library :)
 
-        // User-friendly error message
-        print(error.description)
+        switch error.cause {
+        case let ecpError as ECPError:
+            // Error with ECP
+            // User-friendly error message
+            print(ecpError.userMessage)
 
-        // Technical/debug error message
-        print(error.error.localizedDescription)
+            // Technical/debug error message
+            print(ecpError.description)
+        case let alamofireRACError as AlamofireRACError:
+            // Error with the networking layer
+            print(alamofireRACError.description)
+        default:
+            print("Unknown error!")
+            print(error)
+        }
 
     default:
         break
