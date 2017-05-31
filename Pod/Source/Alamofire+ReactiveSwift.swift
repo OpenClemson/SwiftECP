@@ -135,9 +135,9 @@ public enum AlamofireRACError: Error, AnyErrorConverter {
     public var description: String {
         switch self {
         case .network(let error):
-            return "There was a network issue: \(error)."
+            return "There was a network issue: \(String(describing: error))."
         case .dataSerialization(let error):
-            return "Could not serialize data: \(error)."
+            return "Could not serialize data: \(String(describing: error))."
         case .xmlSerialization:
             return "Could not serialize XML."
         case .incompleteResponse:
