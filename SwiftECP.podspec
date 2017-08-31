@@ -12,7 +12,7 @@ Pod::Spec.new do |s|
   s.source           = { :git => "https://github.com/OpenClemson/SwiftECP.git", :tag => s.version.to_s }
 
   s.ios.deployment_target = '9.0'
-#  s.osx.deployment_target = '10.11'
+  s.osx.deployment_target = '10.11'
 
   s.requires_arc = true
 
@@ -20,7 +20,7 @@ Pod::Spec.new do |s|
 
   s.dependency 'AEXML-CU', '~> 4.2.0'
   s.dependency 'Alamofire', '~> 4.0'
-  s.dependency 'AnyError', '~> 2.0.0'
+  s.dependency 'AnyError', '~> 2.0.1'
   s.dependency 'ReactiveSwift', '~> 1.0'
   s.dependency 'XCGLogger', '~> 4.0'
 end
