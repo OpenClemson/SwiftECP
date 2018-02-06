@@ -106,7 +106,7 @@ extension DataRequest {
                     return observer.send(error: AnyError(cause: error))
                 }
 
-                if errorOnNil && response.result.value?.characters.count == 0 {
+                if errorOnNil && response.result.value?.count == 0 {
                     return observer.send(error: AlamofireRACError.incompleteResponse.asAnyError())
                 }
 

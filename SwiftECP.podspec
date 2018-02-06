@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = "SwiftECP"
-  s.version          = "4.0.4"
+  s.version          = "4.1.4"
   s.summary          = "SwiftECP is a simple Shibboleth ECP client for iOS."
   s.description      = <<-DESC
                        Need Shibboleth login on your iOS or macOS app but don't want to use a webview? Don't want to deal with XML or read a spec? Use SwiftECP to do the work for you! SwiftECP is a spec-conformant Shibboleth ECP client. Simply provide credentials and a Shibboleth-protected resource URL and SwiftECP will hand you a Shibboleth cookie to attach to further requests or inject into a webview.
@@ -18,9 +18,9 @@ Pod::Spec.new do |s|
 
   s.source_files = 'Pod/Source/**/*'
 
-  s.dependency 'AEXML-CU', '~> 4.2.0'
-  s.dependency 'Alamofire', '~> 4.0'
+  s.dependency 'AEXML-CU', '~> 4.2.2'
+  s.dependency 'Alamofire', '~> 4.5'
   s.dependency 'AnyError', '~> 2.0.1'
-  s.dependency 'ReactiveSwift', '~> 1.0'
+  s.dependency 'ReactiveSwift', '~> 3.0'
   s.dependency 'XCGLogger', '~> 4.0'
 end

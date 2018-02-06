@@ -14,7 +14,6 @@ class SwiftECPSpec: QuickSpec {
                     "text/html; application/vnd.paos+xml"
                 ))
                 expect(request.value(forHTTPHeaderField: "PAOS")).to(equal(
-                    // swiftlint:disable:next line_length
                     "ver=\"urn:liberty:paos:2003-08\";\"urn:oasis:names:tc:SAML:2.0:profiles:SSO:ecp\""
                 ))
                 expect(request.timeoutInterval).to(equal(10))

@@ -56,7 +56,6 @@ func buildIdpRequest(
     }
 
     // Get the IdP's URL
-    // swiftlint:disable:next line_length
     let idpURLString = body.root["S:Body"]["samlp:AuthnRequest"]["samlp:Scoping"]["samlp:IDPList"]["samlp:IDPEntry"]
         .attributes["ProviderID"]
 
