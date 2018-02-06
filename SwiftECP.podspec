@@ -22,5 +22,5 @@ Pod::Spec.new do |s|
   s.dependency 'Alamofire', '~> 4.5'
   s.dependency 'AnyError', '~> 2.0.1'
   s.dependency 'ReactiveSwift', '~> 3.0'
-  s.dependency 'XCGLogger', '~> 4.0'
+  s.dependency 'XCGLogger', '~> 6.0'
 end
