@@ -72,8 +72,8 @@ ECPLogin(
 ## Requirements
 
 - iOS 9.0+ / MacOS 10.11+
-- Xcode 8.1+
-- Swift 3.0+
+- Xcode 9.2+
+- Swift 4.2
 
 ## Test
 
