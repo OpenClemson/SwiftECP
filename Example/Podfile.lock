@@ -1,24 +1,22 @@
 PODS:
   - AEXML-CU (4.2.2)
-  - Alamofire (4.8.2)
+  - Alamofire (4.9.0)
   - AnyError (2.0.1)
   - Nimble (7.3.4)
   - ObjcExceptionBridging (1.0.1):
     - ObjcExceptionBridging/ObjcExceptionBridging (= 1.0.1)
   - ObjcExceptionBridging/ObjcExceptionBridging (1.0.1)
   - Quick (1.3.4)
-  - ReactiveSwift (3.1.0):
-    - Result (~> 3.2)
-  - Result (3.2.4)
-  - SwiftECP (4.2.0):
+  - ReactiveSwift (6.1.0)
+  - SwiftECP (5.0.0):
     - AEXML-CU (~> 4.2.2)
     - Alamofire (~> 4.5)
     - AnyError (~> 2.0.1)
-    - ReactiveSwift (~> 3.0)
-    - XCGLogger (~> 6.0)
-  - XCGLogger (6.1.0):
-    - XCGLogger/Core (= 6.1.0)
-  - XCGLogger/Core (6.1.0):
+    - ReactiveSwift (~> 6.0)
+    - XCGLogger (~> 7.0)
+  - XCGLogger (7.0.0):
+    - XCGLogger/Core (= 7.0.0)
+  - XCGLogger/Core (7.0.0):
     - ObjcExceptionBridging
 
 DEPENDENCIES:
@@ -35,7 +33,6 @@ SPEC REPOS:
     - ObjcExceptionBridging
     - Quick
     - ReactiveSwift
-    - Result
     - XCGLogger
 
 EXTERNAL SOURCES:
@@ -44,16 +41,15 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   AEXML-CU: 79e0a075708b4b3e90740a47d10029acb792d98d
-  Alamofire: ae5c501addb7afdbb13687d7f2f722c78734c2d3
+  Alamofire: afc3e7c6db61476cb45cdd23fed06bad03bbc321
   AnyError: e746b158ed04037cf13141de39895071f68c467a
   Nimble: 051e3d8912d40138fa5591c78594f95fb172af37
   ObjcExceptionBridging: c30e00eb3700467e695faeea30e26e18bd445001
   Quick: f4f7f063c524394c73ed93ac70983c609805d481
-  ReactiveSwift: 5b26d2e988fe0eed2daf48c4054d1de74db50184
-  Result: d2d07204ce72856f1fd9130bbe42c35a7b0fea10
-  SwiftECP: cb854b41e722effe85cf9eb38b61b2fb57afe198
-  XCGLogger: 7f7f43f15dfe3a305fa1342b7dc29af656289abd
+  ReactiveSwift: b78c7259f8ca46368238c895ae33a6a3bf9f811c
+  SwiftECP: 98e403a4ff1640fb5c4b26d1f4e56f966ed4354b
+  XCGLogger: 0434f15e3909cdc450bb63faf638b8792ab782ab
 
-PODFILE CHECKSUM: ba2eeaadf7f9565177eded20c73f3e980335b4c7
+PODFILE CHECKSUM: 769322e3c67841799da4bed4ae40778a9889c1e5
 
 COCOAPODS: 1.7.5
