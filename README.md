@@ -73,7 +73,7 @@ ECPLogin(
 
 - iOS 9.0+ / MacOS 10.11+
 - Xcode 9.2+
-- Swift 4.2
+- Swift 5.0
 
 ## Test
 
