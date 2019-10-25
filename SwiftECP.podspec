@@ -20,7 +20,6 @@ Pod::Spec.new do |s|
 
   s.dependency 'AEXML-CU', '~> 4.2.2'
   s.dependency 'Alamofire', '~> 4.5'
-  s.dependency 'AnyError', '~> 2.0.1'
   s.dependency 'ReactiveSwift', '~> 6.0'
   s.dependency 'XCGLogger', '~> 7.0'
 end

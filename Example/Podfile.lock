@@ -1,7 +1,6 @@
 PODS:
   - AEXML-CU (4.2.2)
   - Alamofire (4.9.0)
-  - AnyError (2.0.1)
   - Nimble (7.3.4)
   - ObjcExceptionBridging (1.0.1):
     - ObjcExceptionBridging/ObjcExceptionBridging (= 1.0.1)
@@ -11,7 +10,6 @@ PODS:
   - SwiftECP (5.0.0):
     - AEXML-CU (~> 4.2.2)
     - Alamofire (~> 4.5)
-    - AnyError (~> 2.0.1)
     - ReactiveSwift (~> 6.0)
     - XCGLogger (~> 7.0)
   - XCGLogger (7.0.0):
@@ -28,7 +26,6 @@ SPEC REPOS:
   https://github.com/cocoapods/specs.git:
     - AEXML-CU
     - Alamofire
-    - AnyError
     - Nimble
     - ObjcExceptionBridging
     - Quick
@@ -42,12 +39,11 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   AEXML-CU: 79e0a075708b4b3e90740a47d10029acb792d98d
   Alamofire: afc3e7c6db61476cb45cdd23fed06bad03bbc321
-  AnyError: e746b158ed04037cf13141de39895071f68c467a
   Nimble: 051e3d8912d40138fa5591c78594f95fb172af37
   ObjcExceptionBridging: c30e00eb3700467e695faeea30e26e18bd445001
   Quick: f4f7f063c524394c73ed93ac70983c609805d481
   ReactiveSwift: b78c7259f8ca46368238c895ae33a6a3bf9f811c
-  SwiftECP: 98e403a4ff1640fb5c4b26d1f4e56f966ed4354b
+  SwiftECP: 31846694dbc47220a73ce936d9b855abd5c2f379
   XCGLogger: 0434f15e3909cdc450bb63faf638b8792ab782ab
 
 PODFILE CHECKSUM: 769322e3c67841799da4bed4ae40778a9889c1e5
