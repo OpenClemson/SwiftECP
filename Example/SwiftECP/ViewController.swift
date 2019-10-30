@@ -9,7 +9,7 @@ class ViewController: UIViewController {
         let username = "YOUR_USERNAME"
         let password = "YOUR_PASSWORD"
         let protectedURL = URL(
-            string: "https://app.university.edu"
+            string: "https://my.dev.clemson.edu/srv/broker/protected/redirect.php"
         )!
         let logger = XCGLogger()
         logger.setup(level: .debug)

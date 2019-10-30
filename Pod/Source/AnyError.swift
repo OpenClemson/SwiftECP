@@ -7,10 +7,10 @@ import Foundation
  See also:
  - [Type erasure with AnyError](http://nickager.com/blog/2016/03/07/AnyError)
  */
-public struct AnyError : Error {
-    public let cause:Error
-    
-    public init(cause:Error) {
+public struct AnyError: Error {
+    public let cause: Error
+
+    public init(cause: Error) {
         self.cause = cause
     }
 }
@@ -22,7 +22,7 @@ public struct AnyError : Error {
  - [Type erasure with AnyError](http://nickager.com/blog/2016/03/07/AnyError)
  */
 
-public protocol AnyErrorConverter : Error {
+public protocol AnyErrorConverter: Error {
     func asAnyError() -> AnyError
 
 }
