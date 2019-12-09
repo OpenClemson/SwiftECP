@@ -18,7 +18,9 @@ Pod::Spec.new do |s|
 
   s.source_files = 'Pod/Source/**/*'
 
-  s.dependency 'AEXML-CU', '~> 4.2.2'
+  s.swift_version = '5.0'
+
+  s.dependency 'AEXML-CU', '~> 5.0.0'
   s.dependency 'Alamofire', '~> 4.5'
   s.dependency 'ReactiveSwift', '~> 6.0'
   s.dependency 'XCGLogger', '~> 7.0'
