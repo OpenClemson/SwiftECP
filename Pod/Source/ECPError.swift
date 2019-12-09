@@ -1,5 +1,4 @@
 import Foundation
-import AnyError
 
 public enum ECPError: Error, AnyErrorConverter {
     case extraction
